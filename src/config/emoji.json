@@ -1,0 +1,86 @@
+{
+  "music": {
+    "play": "▶️",
+    "pause": "⏸️",
+    "resume": "▶️",
+    "stop": "⏹️",
+    "skip": "⏭️",
+    "previous": "⏮️",
+    "shuffle": "🔀",
+    "loop": "🔁",
+    "loopTrack": "🔂",
+    "loopQueue": "🔁",
+    "volume": "🔊",
+    "volumeUp": "🔊",
+    "volumeDown": "🔉",
+    "mute": "🔇",
+    "queue": "📋",
+    "nowPlaying": "🎵",
+    "lyrics": "📝",
+    "search": "🔍",
+    "playlist": "📑",
+    "favorite": "⭐",
+    "download": "⬇️"
+  },
+  "general": {
+    "success": "✅",
+    "error": "❌",
+    "warning": "⚠️",
+    "info": "ℹ️",
+    "loading": "⏳",
+    "check": "✔️",
+    "cross": "✖️",
+    "arrow_right": "➡️",
+    "arrow_left": "⬅️",
+    "arrow_up": "⬆️",
+    "arrow_down": "⬇️"
+  },
+  "moderation": {
+    "ban": "🔨",
+    "kick": "👢",
+    "mute": "🔇",
+    "warn": "⚠️",
+    "unmute": "🔊",
+    "unban": "🔓",
+    "lock": "🔒",
+    "unlock": "🔓",
+    "shield": "🛡️"
+  },
+  "economy": {
+    "coin": "💰",
+    "bank": "🏦",
+    "money": "💵",
+    "gem": "💎",
+    "gift": "🎁",
+    "shop": "🛒",
+    "wallet": "👛",
+    "credit_card": "💳"
+  },
+  "utility": {
+    "settings": "⚙️",
+    "tools": "🔧",
+    "search": "🔍",
+    "link": "🔗",
+    "pin": "📌",
+    "calendar": "📅",
+    "clock": "🕐",
+    "bell": "🔔"
+  },
+  "social": {
+    "user": "👤",
+    "users": "👥",
+    "crown": "👑",
+    "star": "⭐",
+    "heart": "❤️",
+    "fire": "🔥",
+    "trophy": "🏆",
+    "medal": "🏅"
+  },
+  "status": {
+    "online": "🟢",
+    "idle": "🟡",
+    "dnd": "🔴",
+    "offline": "⚫",
+    "streaming": "🟣"
+  }
+}

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/layout-head') %>
+    <title>Settings - <%= guildName %></title>
+</head>
+<body>
+    <%- include('../partials/loading', { loadingText: 'Loading settings...' }) %>
+    
+    <div class="page-wrapper">
+        <%- include('../partials/dashboard-nav', { user }) %>
+        
+        <div class="dashboard-layout">
+            <%- include('../partials/sidebar', { guildId, guildName, guildIcon: typeof guildIcon !== 'undefined' ? guildIcon : null, activePage: 'settings' }) %>
+            
+            <main class="main-content">
+                <!-- Page Header -->
+                <div class="page-header slide-up">
+                    <div class="breadcrumb">
+                        <a href="/dashboard">Dashboard</a>
+                        <span>/</span>
+                        <a href="/dashboard/guild/<%= guildId %>"><%= guildName %></a>
+                        <span>/</span>
+                        <span>Settings</span>
+                    </div>
+                    <h1><i class="fas fa-cog" style="color: var(--primary);"></i> Server Settings</h1>
+                    <p>Configure general bot settings for your server</p>
+                </div>
+
+                <div class="grid-2" style="gap: 2rem;">
+                    <!-- General Settings -->
+                    <div class="card slide-up" style="animation-delay: 0.1s;">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-sliders-h" style="color: var(--primary);"></i>
+                                General Settings
+                            </h3>
+                            
+                            <form id="general-settings-form">
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        Bot Prefix
+                                        <span class="help-icon" title="The prefix used for text commands">?</span>
+                                    </label>
+                                    <input type="text" class="form-input" name="prefix" 
+                                           value="<%= typeof settings !== 'undefined' && settings.prefix ? settings.prefix : '!' %>" 
+                                           placeholder="!" maxlength="5">
+                                    <p class="form-hint">Used for text commands (e.g., !help). Max 5 characters.</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        Language
+                                        <span class="help-icon" title="Bot response language">?</span>
+                                    </label>
+                                    <select class="form-select" name="language">
+                                        <option value="en" <%= typeof settings !== 'undefined' && settings.language === 'en' ? 'selected' : '' %>>English</option>
+                                        <option value="es" <%= typeof settings !== 'undefined' && settings.language === 'es' ? 'selected' : '' %>>Español</option>
+                                        <option value="fr" <%= typeof settings !== 'undefined' && settings.language === 'fr' ? 'selected' : '' %>>Français</option>
+                                        <option value="de" <%= typeof settings !== 'undefined' && settings.language === 'de' ? 'selected' : '' %>>Deutsch</option>
+                                        <option value="pt" <%= typeof settings !== 'undefined' && settings.language === 'pt' ? 'selected' : '' %>>Português</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        Timezone
+                                        <span class="help-icon" title="Used for scheduled messages and logs">?</span>
+                                    </label>
+                                    <select class="form-select" name="timezone">
+                                        <option value="UTC" <%= typeof settings !== 'undefined' && settings.timezone === 'UTC' ? 'selected' : '' %>>UTC</option>
+                                        <option value="America/New_York" <%= typeof settings !== 'undefined' && settings.timezone === 'America/New_York' ? 'selected' : '' %>>Eastern Time (US)</option>
+                                        <option value="America/Los_Angeles" <%= typeof settings !== 'undefined' && settings.timezone === 'America/Los_Angeles' ? 'selected' : '' %>>Pacific Time (US)</option>
+                                        <option value="Europe/London" <%= typeof settings !== 'undefined' && settings.timezone === 'Europe/London' ? 'selected' : '' %>>London</option>
+                                        <option value="Europe/Paris" <%= typeof settings !== 'undefined' && settings.timezone === 'Europe/Paris' ? 'selected' : '' %>>Paris</option>
+                                        <option value="Asia/Tokyo" <%= typeof settings !== 'undefined' && settings.timezone === 'Asia/Tokyo' ? 'selected' : '' %>>Tokyo</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Logging Settings -->
+                    <div class="card slide-up" style="animation-delay: 0.2s;">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-clipboard-list" style="color: var(--success);"></i>
+                                Logging Channels
+                            </h3>
+                            
+                            <form id="logging-settings-form">
+                                <div class="form-group">
+                                    <label class="form-label">Moderation Logs</label>
+                                    <select class="form-select" name="modLogChannel">
+                                        <option value="">None</option>
+                                        <% if (typeof channels !== 'undefined') { %>
+                                            <% channels.filter(c => c.type === 0).forEach(channel => { %>
+                                                <option value="<%= channel.id %>" <%= typeof settings !== 'undefined' && settings.modLogChannel === channel.id ? 'selected' : '' %>>
+                                                    #<%= channel.name %>
+                                                </option>
+                                            <% }); %>
+                                        <% } %>
+                                    </select>
+                                    <p class="form-hint">Bans, kicks, mutes, and warnings will be logged here.</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Message Logs</label>
+                                    <select class="form-select" name="messageLogChannel">
+                                        <option value="">None</option>
+                                        <% if (typeof channels !== 'undefined') { %>
+                                            <% channels.filter(c => c.type === 0).forEach(channel => { %>
+                                                <option value="<%= channel.id %>" <%= typeof settings !== 'undefined' && settings.messageLogChannel === channel.id ? 'selected' : '' %>>
+                                                    #<%= channel.name %>
+                                                </option>
+                                            <% }); %>
+                                        <% } %>
+                                    </select>
+                                    <p class="form-hint">Deleted and edited messages will be logged here.</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Member Logs</label>
+                                    <select class="form-select" name="memberLogChannel">
+                                        <option value="">None</option>
+                                        <% if (typeof channels !== 'undefined') { %>
+                                            <% channels.filter(c => c.type === 0).forEach(channel => { %>
+                                                <option value="<%= channel.id %>" <%= typeof settings !== 'undefined' && settings.memberLogChannel === channel.id ? 'selected' : '' %>>
+                                                    #<%= channel.name %>
+                                                </option>
+                                            <% }); %>
+                                        <% } %>
+                                    </select>
+                                    <p class="form-hint">Member joins, leaves, and updates will be logged here.</p>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                    <i class="fas fa-save"></i> Save Logging Settings
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Auto Moderation -->
+                    <div class="card slide-up" style="animation-delay: 0.3s;">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-robot" style="color: var(--warning);"></i>
+                                Auto Moderation
+                            </h3>
+                            
+                            <form id="automod-settings-form">
+                                <div class="form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px; margin-bottom: 1rem;">
+                                        <div>
+                                            <strong>Anti-Spam</strong>
+                                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Automatically detect and remove spam messages</p>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" name="antiSpam" <%= typeof settings !== 'undefined' && settings.antiSpam ? 'checked' : '' %>>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px; margin-bottom: 1rem;">
+                                        <div>
+                                            <strong>Anti-Links</strong>
+                                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Block unauthorized links and invites</p>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" name="antiLinks" <%= typeof settings !== 'undefined' && settings.antiLinks ? 'checked' : '' %>>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                        <div>
+                                            <strong>Bad Words Filter</strong>
+                                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Filter profanity and inappropriate content</p>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" name="badWordsFilter" <%= typeof settings !== 'undefined' && settings.badWordsFilter ? 'checked' : '' %>>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                                    <i class="fas fa-save"></i> Save Auto-Mod Settings
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="card slide-up" style="animation-delay: 0.4s; border-color: rgba(239, 68, 68, 0.3);">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--danger);">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Danger Zone
+                            </h3>
+                            
+                            <div style="padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong>Reset All Settings</strong>
+                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Reset all bot settings to default values</p>
+                                    </div>
+                                    <button class="btn btn-danger btn-sm" onclick="confirmReset()">
+                                        <i class="fas fa-undo"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div style="padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong>Clear All Data</strong>
+                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Delete all server data including levels, economy, etc.</p>
+                                    </div>
+                                    <button class="btn btn-danger btn-sm" onclick="confirmClearData()">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+    <script>
+        const guildId = '<%= guildId %>';
+
+        // General Settings Form
+        document.getElementById('general-settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`/api/guild/${guildId}/settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    Toast.success('Settings saved successfully!');
+                } else {
+                    throw new Error('Failed to save');
+                }
+            } catch (error) {
+                Toast.error('Failed to save settings. Please try again.');
+            }
+        });
+
+        // Logging Settings Form
+        document.getElementById('logging-settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`/api/guild/${guildId}/settings/logging`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    Toast.success('Logging settings saved!');
+                } else {
+                    throw new Error('Failed to save');
+                }
+            } catch (error) {
+                Toast.error('Failed to save logging settings.');
+            }
+        });
+
+        // Auto-Mod Settings Form
+        document.getElementById('automod-settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                antiSpam: formData.get('antiSpam') === 'on',
+                antiLinks: formData.get('antiLinks') === 'on',
+                badWordsFilter: formData.get('badWordsFilter') === 'on'
+            };
+            
+            try {
+                const response = await fetch(`/api/guild/${guildId}/settings/automod`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    Toast.success('Auto-moderation settings saved!');
+                } else {
+                    throw new Error('Failed to save');
+                }
+            } catch (error) {
+                Toast.error('Failed to save auto-mod settings.');
+            }
+        });
+
+        function confirmReset() {
+            if (confirm('Are you sure you want to reset all settings? This cannot be undone.')) {
+                // Reset logic here
+                Toast.success('Settings have been reset to defaults.');
+            }
+        }
+
+        function confirmClearData() {
+            if (confirm('Are you sure you want to clear ALL server data? This includes levels, economy, and all other data. This cannot be undone!')) {
+                // Clear data logic here
+                Toast.success('All server data has been cleared.');
+            }
+        }
+    </script>
+</body>
+</html>

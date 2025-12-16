@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/layout-head') %>
+    <title><%= guildName || 'Server' %> - Dashboard</title>
+</head>
+<body>
+    <%- include('../partials/loading', { loadingText: 'Loading dashboard...' }) %>
+    
+    <div class="page-wrapper">
+        <%- include('../partials/dashboard-nav', { user }) %>
+        
+        <div class="dashboard-layout">
+            <%- include('../partials/sidebar', { guildId, guildName, guildIcon: typeof guildIcon !== 'undefined' ? guildIcon : null, activePage: 'overview' }) %>
+            
+            <main class="main-content">
+                <!-- Page Header -->
+                <div class="page-header slide-up">
+                    <div class="breadcrumb">
+                        <a href="/dashboard">Dashboard</a>
+                        <span>/</span>
+                        <span><%= guildName %></span>
+                    </div>
+                    <h1>Server Overview</h1>
+                    <p>Manage your server's bot settings and features</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid-4 stagger" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-value" data-animate-number="<%= typeof memberCount !== 'undefined' ? memberCount : 0 %>">0</div>
+                        <div class="stat-label"><i class="fas fa-users"></i> Members</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" data-animate-number="<%= typeof channelCount !== 'undefined' ? channelCount : 0 %>">0</div>
+                        <div class="stat-label"><i class="fas fa-hashtag"></i> Channels</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" data-animate-number="<%= typeof roleCount !== 'undefined' ? roleCount : 0 %>">0</div>
+                        <div class="stat-label"><i class="fas fa-tag"></i> Roles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" data-animate-number="<%= typeof commandsUsed !== 'undefined' ? commandsUsed : 0 %>">0</div>
+                        <div class="stat-label"><i class="fas fa-terminal"></i> Commands Used</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem;">
+                    <i class="fas fa-bolt" style="color: var(--primary);"></i> Quick Actions
+                </h2>
+                
+                <div class="grid-3 stagger">
+                    <!-- Modules -->
+                    <a href="/dashboard/guild/<%= guildId %>/modules" class="card card-clickable">
+                        <div class="card-body">
+                            <div class="card-icon" style="background: rgba(139, 92, 246, 0.2);">
+                                <i class="fas fa-puzzle-piece" style="color: var(--primary-light);"></i>
+                            </div>
+                            <h3 class="card-title">Modules</h3>
+                            <p class="card-desc">Enable or disable bot features like moderation, economy, leveling, and more.</p>
+                        </div>
+                    </a>
+
+                    <!-- Settings -->
+                    <a href="/dashboard/guild/<%= guildId %>/settings" class="card card-clickable">
+                        <div class="card-body">
+                            <div class="card-icon" style="background: rgba(16, 185, 129, 0.2);">
+                                <i class="fas fa-cog" style="color: var(--success);"></i>
+                            </div>
+                            <h3 class="card-title">Settings</h3>
+                            <p class="card-desc">Configure prefix, language, logging channels, and general bot settings.</p>
+                        </div>
+                    </a>
+
+                    <!-- Moderation -->
+                    <a href="/dashboard/guild/<%= guildId %>/moderation" class="card card-clickable">
+                        <div class="card-body">
+                            <div class="card-icon" style="background: rgba(239, 68, 68, 0.2);">
+                                <i class="fas fa-shield-alt" style="color: var(--danger);"></i>
+                            </div>
+                            <h3 class="card-title">Moderation</h3>
+                            <p class="card-desc">View moderation cases, configure auto-mod, and manage warnings.</p>
+                        </div>
+                    </a>
+
+                    <!-- Analytics -->
+                    <a href="/dashboard/guild/<%= guildId %>/analytics" class="card card-clickable">
+                        <div class="card-body">
+                            <div class="card-icon" style="background: rgba(59, 130, 246, 0.2);">
+                                <i class="fas fa-chart-bar" style="color: #3b82f6;"></i>
+                            </div>
+                            <h3 class="card-title">Analytics</h3>
+                            <p class="card-desc">View server statistics, member activity, and command usage insights.</p>
+                        </div>
+                    </a>
+
+                    <!-- Welcome -->
+                    <a href="/dashboard/guild/<%= guildId %>/welcome" class="card card-clickable">
+                        <div class="card-body">
+                            <div class="card-icon" style="background: rgba(245, 158, 11, 0.2);">
+                                <i class="fas fa-hand-wave" style="color: var(--warning);"></i>
+                            </div>
+                            <h3 class="card-title">Welcome Setup</h3>
+                            <p class="card-desc">Configure welcome messages, auto-roles, and member greetings.</p>
+                        </div>
+                    </a>
+
+                    <!-- Tickets -->
+                    <a href="/dashboard/guild/<%= guildId %>/tickets" class="card card-clickable">
+                        <div class="card-body">
+                            <div class="card-icon" style="background: rgba(236, 72, 153, 0.2);">
+                                <i class="fas fa-ticket-alt" style="color: #ec4899;"></i>
+                            </div>
+                            <h3 class="card-title">Ticket System</h3>
+                            <p class="card-desc">Set up support tickets with categories, panels, and transcripts.</p>
+                        </div>
+                    </a>
+
+                    <!-- Sticky Messages -->
+                    <a href="/dashboard/guild/<%= guildId %>/sticky" class="card card-clickable">
+                        <div class="card-body">
+                            <div class="card-icon" style="background: rgba(168, 85, 247, 0.2);">
+                                <i class="fas fa-thumbtack" style="color: #a855f7;"></i>
+                            </div>
+                            <h3 class="card-title">Sticky Messages</h3>
+                            <p class="card-desc">Create messages that stay at the bottom of channels.</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Getting Started Guide -->
+                <div class="card slide-up" style="margin-top: 2rem; animation-delay: 0.5s;">
+                    <div class="card-body">
+                        <div style="display: flex; align-items: flex-start; gap: 1.5rem;">
+                            <div style="width: 60px; height: 60px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fas fa-rocket" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Getting Started</h3>
+                                <p style="color: var(--text-muted); margin-bottom: 1rem;">New to the dashboard? Here's how to get the most out of your bot:</p>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                        <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600;">1</span>
+                                        <span style="font-size: 0.9rem;">Enable modules you need</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                        <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600;">2</span>
+                                        <span style="font-size: 0.9rem;">Configure your settings</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                        <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600;">3</span>
+                                        <span style="font-size: 0.9rem;">Set up welcome messages</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                        <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600;">4</span>
+                                        <span style="font-size: 0.9rem;">Explore all features!</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+    <script>
+        // Initialize guide for first-time users
+        document.addEventListener('DOMContentLoaded', () => {
+            Guide.init([
+                {
+                    target: '.sidebar',
+                    title: 'Navigation Sidebar',
+                    text: 'Use the sidebar to navigate between different sections of your server dashboard.',
+                    position: 'bottom'
+                },
+                {
+                    target: '[href*="/modules"]',
+                    title: 'Modules',
+                    text: 'Enable or disable bot features here. Each module can be toggled on or off.',
+                    position: 'bottom'
+                },
+                {
+                    target: '[href*="/settings"]',
+                    title: 'Settings',
+                    text: 'Configure your bot\'s prefix, language, and other general settings.',
+                    position: 'bottom'
+                },
+                {
+                    target: '.stat-card',
+                    title: 'Server Stats',
+                    text: 'View your server\'s statistics at a glance, including members, channels, and command usage.',
+                    position: 'bottom'
+                }
+            ]);
+            Guide.show();
+        });
+    </script>
+</body>
+</html>

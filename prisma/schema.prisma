@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Guild {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  guildId       String   @unique
+  prefix        String   @default("!")
+  language      String   @default("en")
+  premium       Boolean  @default(false)
+  premiumUntil  DateTime?
+  
+  // Module toggles (disabled by default, enable via dashboard)
+  modulesEnabled Json     @default("{\"moderation\":false,\"ai\":false,\"tickets\":false,\"welcome\":false}")
+  
+  // Welcome settings
+  welcomeChannel String?
+  welcomeMessage String?
+  welcomeEmbed   Json?
+  
+  // Ticket settings
+  ticketCategory String?
+  ticketMessage  String?
+  
+  // Settings
+  settings      Json     @default("{}")
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model StickyMessage {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  guildId       String
+  channelId     String   @unique
+  messageId     String?
+  content       String?
+  embed         Json?
+  enabled       Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model User {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @unique
+  
+  // Global stats
+  commandsUsed  Int      @default(0)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Member {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String
+  guildId       String
+  
+  // Moderation
+  warnings      Int      @default(0)
+  infractions   Json     @default("[]")
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([userId, guildId])
+}
+
+model Case {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  caseId        Int
+  guildId       String
+  userId        String
+  moderatorId   String
+  type          String
+  reason        String
+  duration      Int?
+  active        Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  
+  @@unique([guildId, caseId])
+}
+
+model Ticket {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  ticketId      Int
+  guildId       String
+  channelId     String
+  userId        String
+  category      String
+  status        String   @default("open")
+  priority      String   @default("normal")
+  transcript    String?
+  
+  createdAt     DateTime @default(now())
+  closedAt      DateTime?
+  
+  @@unique([guildId, ticketId])
+}
+
+model AIConversation {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String
+  guildId       String?
+  channelId     String
+  messages      Json     @default("[]")
+  model         String   @default("gpt-3.5-turbo")
+  tokensUsed    Int      @default(0)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

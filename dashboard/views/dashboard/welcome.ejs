@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/layout-head') %>
+    <title>Welcome Setup - <%= guildName %></title>
+</head>
+<body>
+    <%- include('../partials/loading', { loadingText: 'Loading welcome settings...' }) %>
+    
+    <div class="page-wrapper">
+        <%- include('../partials/dashboard-nav', { user }) %>
+        
+        <div class="dashboard-layout">
+            <%- include('../partials/sidebar', { guildId, guildName, guildIcon: typeof guildIcon !== 'undefined' ? guildIcon : null, activePage: 'welcome' }) %>
+            
+            <main class="main-content">
+                <!-- Page Header -->
+                <div class="page-header slide-up">
+                    <div class="breadcrumb">
+                        <a href="/dashboard">Dashboard</a>
+                        <span>/</span>
+                        <a href="/dashboard/guild/<%= guildId %>"><%= guildName %></a>
+                        <span>/</span>
+                        <span>Welcome</span>
+                    </div>
+                    <h1><i class="fas fa-hand-wave" style="color: var(--warning);"></i> Welcome Setup</h1>
+                    <p>Configure welcome messages for new members joining your server</p>
+                </div>
+
+                <div class="grid-2" style="gap: 2rem;">
+                    <!-- Left Column - Settings -->
+                    <div>
+                        <!-- Welcome Channel -->
+                        <div class="card slide-up" style="animation-delay: 0.1s; margin-bottom: 1.5rem;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-hashtag" style="color: var(--primary);"></i>
+                                    Welcome Channel
+                                </h3>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <select id="welcomeChannel" class="form-select">
+                                        <option value="">Disabled - No welcome messages</option>
+                                        <% if (typeof channels !== 'undefined') { %>
+                                            <% channels.forEach(channel => { %>
+                                                <option value="<%= channel.id %>" <%= typeof settings !== 'undefined' && settings.welcomeChannel === channel.id ? 'selected' : '' %>>
+                                                    #<%= channel.name %>
+                                                </option>
+                                            <% }); %>
+                                        <% } %>
+                                    </select>
+                                    <p class="form-hint">Select where welcome messages will be sent</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message Type -->
+                        <div class="card slide-up" style="animation-delay: 0.2s; margin-bottom: 1.5rem;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-palette" style="color: var(--accent);"></i>
+                                    Message Type
+                                </h3>
+                                <div style="display: flex; gap: 1rem;">
+                                    <button id="textMode" class="btn btn-primary" style="flex: 1;">
+                                        <i class="fas fa-align-left"></i> Text
+                                    </button>
+                                    <button id="embedMode" class="btn btn-secondary" style="flex: 1;">
+                                        <i class="fas fa-square"></i> Embed
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Text Message Settings -->
+                        <div id="textModeContent" class="card slide-up" style="animation-delay: 0.3s; margin-bottom: 1.5rem;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+                                    <i class="fas fa-message" style="color: var(--success);"></i>
+                                    Welcome Message
+                                </h3>
+                                <div class="form-group">
+                                    <textarea id="welcomeMessage" class="form-textarea" rows="4" placeholder="Welcome {user} to {server}! You are member #{membercount}"><%= typeof settings !== 'undefined' && settings.welcomeMessage ? settings.welcomeMessage : '' %></textarea>
+                                </div>
+                                <div style="background: rgba(139, 92, 246, 0.1); border-radius: 8px; padding: 1rem;">
+                                    <p style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Available Placeholders:</p>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                        <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">{user}</code>
+                                        <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">{username}</code>
+                                        <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">{server}</code>
+                                        <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">{membercount}</code>
+                                        <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">{mention}</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Embed Settings -->
+                        <div id="embedModeContent" class="card" style="margin-bottom: 1.5rem; display: none;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+                                    <i class="fas fa-square" style="color: #3b82f6;"></i>
+                                    Embed Settings
+                                </h3>
+                                <div class="form-group">
+                                    <label class="form-label">Embed Title</label>
+                                    <input type="text" id="embedTitle" class="form-input" placeholder="Welcome to {server}!" value="<%= typeof embedData !== 'undefined' && embedData.title ? embedData.title : '' %>">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Embed Description</label>
+                                    <textarea id="embedDescription" class="form-textarea" rows="3" placeholder="Welcome {user}! Enjoy your stay!"><%= typeof embedData !== 'undefined' && embedData.description ? embedData.description : '' %></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Embed Color</label>
+                                    <div style="display: flex; gap: 1rem; align-items: center;">
+                                        <input type="color" id="embedColor" value="<%= typeof embedData !== 'undefined' && embedData.color ? embedData.color : '#5865F2' %>" style="width: 60px; height: 40px; border: none; border-radius: 8px; cursor: pointer;">
+                                        <input type="text" id="embedColorHex" class="form-input" style="width: 120px;" value="<%= typeof embedData !== 'undefined' && embedData.color ? embedData.color : '#5865F2' %>">
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Thumbnail URL (optional)</label>
+                                    <input type="text" id="embedThumbnail" class="form-input" placeholder="https://example.com/image.png" value="<%= typeof embedData !== 'undefined' && embedData.thumbnail ? embedData.thumbnail : '' %>">
+                                    <p class="form-hint">Use {avatar} for the user's avatar</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Role -->
+                        <div class="card slide-up" style="animation-delay: 0.4s; margin-bottom: 1.5rem;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-user-tag" style="color: var(--danger);"></i>
+                                    Auto Role
+                                </h3>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <select id="autoRole" class="form-select">
+                                        <option value="">None - Don't assign a role</option>
+                                        <% if (typeof roles !== 'undefined') { %>
+                                            <% roles.forEach(role => { %>
+                                                <option value="<%= role.id %>" <%= typeof settings !== 'undefined' && settings.autoRole === role.id ? 'selected' : '' %>>
+                                                    @<%= role.name %>
+                                                </option>
+                                            <% }); %>
+                                        <% } %>
+                                    </select>
+                                    <p class="form-hint">Automatically assign this role to new members</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        <button id="saveBtn" class="btn btn-primary slide-up" style="width: 100%; padding: 1rem; font-size: 1rem; animation-delay: 0.5s;">
+                            <i class="fas fa-save"></i> Save Welcome Settings
+                        </button>
+                    </div>
+
+                    <!-- Right Column - Preview -->
+                    <div>
+                        <div class="card slide-up" style="animation-delay: 0.3s; position: sticky; top: 100px;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-eye" style="color: var(--primary);"></i>
+                                    Live Preview
+                                </h3>
+                                <div id="preview" style="background: #36393f; border-radius: 8px; padding: 1rem; min-height: 100px;">
+                                    <p style="color: #72767d;">Configure your welcome message to see a preview</p>
+                                </div>
+                                <button id="testBtn" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">
+                                    <i class="fas fa-paper-plane"></i> Send Test Message
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+    <script>
+        const guildId = '<%= guildId %>';
+        let currentMode = 'text';
+
+        // Mode switching
+        document.getElementById('textMode').addEventListener('click', () => {
+            currentMode = 'text';
+            document.getElementById('textMode').className = 'btn btn-primary';
+            document.getElementById('embedMode').className = 'btn btn-secondary';
+            document.getElementById('textModeContent').style.display = 'block';
+            document.getElementById('embedModeContent').style.display = 'none';
+            updatePreview();
+        });
+
+        document.getElementById('embedMode').addEventListener('click', () => {
+            currentMode = 'embed';
+            document.getElementById('embedMode').className = 'btn btn-primary';
+            document.getElementById('textMode').className = 'btn btn-secondary';
+            document.getElementById('embedModeContent').style.display = 'block';
+            document.getElementById('textModeContent').style.display = 'none';
+            updatePreview();
+        });
+
+        // Color sync
+        document.getElementById('embedColor').addEventListener('input', (e) => {
+            document.getElementById('embedColorHex').value = e.target.value;
+            updatePreview();
+        });
+
+        document.getElementById('embedColorHex').addEventListener('input', (e) => {
+            if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                document.getElementById('embedColor').value = e.target.value;
+                updatePreview();
+            }
+        });
+
+        // Update preview
+        function updatePreview() {
+            const preview = document.getElementById('preview');
+            const replacePlaceholders = (text) => {
+                return text
+                    .replace(/{user}/g, '<span style="color: #7289da;">@NewMember</span>')
+                    .replace(/{username}/g, 'NewMember')
+                    .replace(/{server}/g, '<%= guildName %>')
+                    .replace(/{membercount}/g, '1,234')
+                    .replace(/{mention}/g, '<span style="color: #7289da;">@NewMember</span>');
+            };
+
+            if (currentMode === 'text') {
+                const message = document.getElementById('welcomeMessage').value || 'Welcome {user} to {server}!';
+                preview.innerHTML = `<p style="color: #dcddde;">${replacePlaceholders(message)}</p>`;
+            } else {
+                const title = document.getElementById('embedTitle').value || 'Welcome!';
+                const description = document.getElementById('embedDescription').value || 'Welcome to the server!';
+                const color = document.getElementById('embedColor').value;
+                const thumbnail = document.getElementById('embedThumbnail').value;
+                
+                preview.innerHTML = `
+                    <div style="border-left: 4px solid ${color}; padding-left: 12px; background: #2f3136; border-radius: 4px; padding: 12px;">
+                        ${thumbnail ? `<img src="${thumbnail.replace('{avatar}', 'https://cdn.discordapp.com/embed/avatars/0.png')}" style="width: 80px; height: 80px; border-radius: 50%; float: right; margin-left: 16px;" onerror="this.style.display='none'">` : ''}
+                        <h4 style="color: #fff; font-weight: 600; margin-bottom: 8px;">${replacePlaceholders(title)}</h4>
+                        <p style="color: #dcddde; font-size: 14px;">${replacePlaceholders(description)}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Live preview updates
+        ['welcomeMessage', 'embedTitle', 'embedDescription', 'embedThumbnail'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+        });
+
+        // Save settings
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const data = {
+                welcomeChannel: document.getElementById('welcomeChannel').value,
+                autoRole: document.getElementById('autoRole').value,
+                mode: currentMode
+            };
+
+            if (currentMode === 'text') {
+                data.welcomeMessage = document.getElementById('welcomeMessage').value;
+            } else {
+                data.welcomeEmbed = {
+                    title: document.getElementById('embedTitle').value,
+                    description: document.getElementById('embedDescription').value,
+                    color: document.getElementById('embedColor').value,
+                    thumbnail: document.getElementById('embedThumbnail').value
+                };
+            }
+
+            try {
+                const response = await fetch(`/api/guild/${guildId}/welcome`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    Toast.success('Welcome settings saved successfully!');
+                } else {
+                    throw new Error('Failed to save');
+                }
+            } catch (error) {
+                Toast.error('Failed to save settings. Please try again.');
+            }
+        });
+
+        // Test message
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const channelId = document.getElementById('welcomeChannel').value;
+            if (!channelId) {
+                Toast.error('Please select a welcome channel first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/guild/${guildId}/welcome/test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channelId })
+                });
+
+                if (response.ok) {
+                    Toast.success('Test message sent!');
+                } else {
+                    throw new Error('Failed to send');
+                }
+            } catch (error) {
+                Toast.error('Failed to send test message');
+            }
+        });
+
+        // Initial preview
+        updatePreview();
+    </script>
+</body>
+</html>

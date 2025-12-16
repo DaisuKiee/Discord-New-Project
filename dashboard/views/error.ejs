@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        body {
+            background: var(--bg-dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div style="text-align: center; padding: 2rem; max-width: 500px;">
+        <!-- Error Icon -->
+        <div style="width: 100px; height: 100px; border-radius: 24px; background: rgba(239, 68, 68, 0.1); border: 2px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--danger);"></i>
+        </div>
+
+        <!-- Error Message -->
+        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text);">
+            Oops! Something went wrong
+        </h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem; line-height: 1.6;">
+            <%= typeof message !== 'undefined' && message ? message : 'An unexpected error occurred. Please try again later.' %>
+        </p>
+
+        <!-- Error Code -->
+        <% if (typeof statusCode !== 'undefined' && statusCode) { %>
+            <div style="display: inline-block; padding: 0.5rem 1rem; background: rgba(239, 68, 68, 0.1); border-radius: 8px; margin-bottom: 2rem;">
+                <span style="color: var(--danger); font-weight: 600;">Error Code: <%= statusCode %></span>
+            </div>
+        <% } %>
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/" class="btn btn-primary">
+                <i class="fas fa-home"></i> Go Home
+            </a>
+            <button onclick="history.back()" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Go Back
+            </button>
+        </div>
+
+        <!-- Help Link -->
+        <p style="margin-top: 2rem; color: var(--text-dim); font-size: 0.9rem;">
+            Need help? <a href="/support" style="color: var(--primary-light); text-decoration: none;">Contact Support</a>
+        </p>
+    </div>
+</body>
+</html>

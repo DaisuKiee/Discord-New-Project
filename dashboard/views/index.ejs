@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Discord Bot - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        body {
+            background: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(139, 92, 246, 0.2);
+            border-top-color: #a78bfa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Page Fade In */
+        .page-content {
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards;
+            animation-delay: 0.3s;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        /* Scroll Reveal Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .feature-btn {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .feature-btn:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateY(-2px);
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+        .primary-btn {
+            background: #5865F2;
+            transition: all 0.3s ease;
+        }
+        .primary-btn:hover {
+            background: #4752C4;
+            transform: translateY(-2px);
+        }
+        .secondary-btn {
+            background: rgba(88, 101, 242, 0.1);
+            border: 1px solid rgba(88, 101, 242, 0.3);
+            transition: all 0.3s ease;
+        }
+        .secondary-btn:hover {
+            background: rgba(88, 101, 242, 0.2);
+            border-color: rgba(88, 101, 242, 0.5);
+        }
+        
+        /* Server Showcase Animation */
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .scroll-container {
+            animation: scroll 30s linear infinite;
+        }
+        .scroll-container:hover {
+            animation-play-state: paused;
+        }
+        
+        .server-card {
+            background: rgba(20, 20, 25, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            min-width: 280px;
+        }
+        .server-card:hover {
+            background: rgba(30, 30, 35, 0.9);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+        .server-card img {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(192, 132, 252, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Integration Cards */
+        .integration-card {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .integration-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        .integration-card:hover::before {
+            left: 100%;
+        }
+        .integration-card:hover {
+            background: rgba(40, 40, 40, 0.8);
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+        }
+        .integration-icon {
+            transition: transform 0.4s ease;
+        }
+        .integration-card:hover .integration-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        /* Stagger Animation */
+        .stagger-item {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: staggerIn 0.6s ease forwards;
+        }
+        @keyframes staggerIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .stagger-item:nth-child(1) { animation-delay: 0.1s; }
+        .stagger-item:nth-child(2) { animation-delay: 0.2s; }
+        .stagger-item:nth-child(3) { animation-delay: 0.3s; }
+        .stagger-item:nth-child(4) { animation-delay: 0.4s; }
+        .stagger-item:nth-child(5) { animation-delay: 0.5s; }
+        .stagger-item:nth-child(6) { animation-delay: 0.6s; }
+        .stagger-item:nth-child(7) { animation-delay: 0.7s; }
+        .stagger-item:nth-child(8) { animation-delay: 0.8s; }
+        
+        /* Hero Section Fade In */
+        .hero-content {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: heroFadeIn 1s ease forwards;
+            animation-delay: 0.5s;
+        }
+        @keyframes heroFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Feature Buttons Slide In */
+        .feature-slide {
+            opacity: 0;
+            transform: translateX(30px);
+            animation: slideInRight 0.8s ease forwards;
+        }
+        .feature-slide:nth-child(1) { animation-delay: 0.7s; }
+        .feature-slide:nth-child(2) { animation-delay: 0.8s; }
+        .feature-slide:nth-child(3) { animation-delay: 0.9s; }
+        @keyframes slideInRight {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader mb-6"></div>
+        <p class="text-gray-400 text-lg">Loading Dashboard...</p>
+    </div>
+
+    <div class="page-content">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <img id="bot-avatar" src="" alt="Bot" class="w-10 h-10 rounded-full hidden">
+                    <div id="bot-avatar-placeholder" class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <i class="fas fa-robot text-xl"></i>
+                    </div>
+                    <span id="bot-name" class="text-xl font-bold">Discord Bot</span>
+                </div>
+
+                <!-- Nav Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="nav-link font-medium">Home</a>
+                    <a href="/commands" class="nav-link font-medium">Commands</a>
+                    <a href="/status" class="nav-link font-medium">Status</a>
+                    <a href="/docs" class="nav-link font-medium">Docs</a>
+                    <a href="/faq" class="nav-link font-medium">FAQ</a>
+                </div>
+
+                <!-- Dashboard Button -->
+                <div>
+                    <% if (user) { %>
+                        <a href="/dashboard" class="primary-btn px-6 py-2.5 rounded-lg font-semibold inline-flex items-center space-x-2">
+                            <i class="fab fa-discord"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    <% } else { %>
+                        <a href="/auth/login" class="primary-btn px-6 py-2.5 rounded-lg font-semibold inline-flex items-center space-x-2">
+                            <i class="fab fa-discord"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="pt-32 pb-20">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-12">
+                <!-- Left Content -->
+                <div class="flex-1 max-w-2xl hero-content">
+                    <h1 class="text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+                        <span id="hero-bot-name">Discord Bot</span> is<br>
+                        Discord's<br>
+                        <span class="gradient-text">premier all-in-one</span>
+                    </h1>
+                    <p class="text-xl text-gray-400 mb-8 leading-relaxed">
+                        Meet the leading bot for management and engagement. Built to elevate your community's experience and streamline server management.
+                    </p>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="stats-card p-4 rounded-xl">
+                            <div class="text-3xl font-bold gradient-text" id="guild-count">
+                                <span class="inline-block animate-pulse">...</span>
+                            </div>
+                            <div class="text-sm text-gray-400">Servers</div>
+                        </div>
+                        <div class="stats-card p-4 rounded-xl">
+                            <div class="text-3xl font-bold gradient-text" id="user-count">
+                                <span class="inline-block animate-pulse">...</span>
+                            </div>
+                            <div class="text-sm text-gray-400">Users</div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="/auth/login" class="primary-btn px-8 py-4 rounded-lg font-semibold inline-flex items-center space-x-2 text-lg">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Invite to Discord</span>
+                        </a>
+                        <a href="/vote" class="secondary-btn px-8 py-4 rounded-lg font-semibold inline-flex items-center space-x-2 text-lg">
+                            <i class="fas fa-star"></i>
+                            <span>Vote</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Feature Buttons -->
+                <div class="flex flex-col gap-4 w-full lg:w-auto lg:min-w-[280px]">
+                    <a href="/starboard" class="feature-btn px-6 py-4 rounded-xl flex items-center space-x-3 group feature-slide">
+                        <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center group-hover:bg-yellow-500/30 transition">
+                            <i class="fas fa-star text-2xl text-yellow-400"></i>
+                        </div>
+                        <span class="font-semibold text-lg">Starboard</span>
+                    </a>
+
+                    <a href="/boost-perks" class="feature-btn px-6 py-4 rounded-xl flex items-center space-x-3 group feature-slide">
+                        <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center group-hover:bg-pink-500/30 transition">
+                            <i class="fas fa-rocket text-2xl text-pink-400"></i>
+                        </div>
+                        <span class="font-semibold text-lg">Boost Perks</span>
+                    </a>
+
+                    <a href="/auto-roles" class="feature-btn px-6 py-4 rounded-xl flex items-center space-x-3 group feature-slide">
+                        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition">
+                            <i class="fas fa-user-plus text-2xl text-purple-400"></i>
+                        </div>
+                        <span class="font-semibold text-lg">Auto Roles</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Server Showcase Section -->
+    <section class="py-16 overflow-hidden reveal bg-gradient-to-b from-transparent via-purple-900/5 to-transparent">
+        <div class="container mx-auto px-6 mb-8">
+            <div class="text-center mb-8">
+                <p class="text-sm text-gray-500 uppercase tracking-wider mb-2 font-semibold">Powering</p>
+                <h3 class="text-2xl font-bold">
+                    <span id="showcase-count" class="gradient-text">...</span>
+                    <span class="text-gray-400">users across</span>
+                    <span id="showcase-guilds" class="gradient-text">...</span>
+                    <span class="text-gray-400">communities</span>
+                </h3>
+            </div>
+        </div>
+        
+        <div class="relative">
+            <!-- Gradient overlays for fade effect -->
+            <div class="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none"></div>
+            <div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none"></div>
+            
+            <div class="flex overflow-hidden py-4">
+                <div id="server-showcase" class="flex gap-6 scroll-container px-6">
+                    <!-- Loading placeholders -->
+                    <div class="server-card flex-shrink-0 p-5 rounded-2xl animate-pulse">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-14 h-14 rounded-full bg-gray-700"></div>
+                            <div class="flex-1">
+                                <div class="h-5 bg-gray-700 rounded mb-2 w-32"></div>
+                                <div class="h-4 bg-gray-700 rounded w-24"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="server-card flex-shrink-0 p-5 rounded-2xl animate-pulse">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-14 h-14 rounded-full bg-gray-700"></div>
+                            <div class="flex-1">
+                                <div class="h-5 bg-gray-700 rounded mb-2 w-32"></div>
+                                <div class="h-4 bg-gray-700 rounded w-24"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="server-card flex-shrink-0 p-5 rounded-2xl animate-pulse">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-14 h-14 rounded-full bg-gray-700"></div>
+                            <div class="flex-1">
+                                <div class="h-5 bg-gray-700 rounded mb-2 w-32"></div>
+                                <div class="h-4 bg-gray-700 rounded w-24"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations Section -->
+    <section class="py-20 reveal">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">
+                    <span class="gradient-text">Integrations with your favorite Platforms</span>
+                </h2>
+                <p class="text-gray-400 text-lg">Effortlessly track, view, search, play, notify updates and more from many platforms.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                <!-- YouTube -->
+                <div class="integration-card p-6 rounded-2xl stagger-item">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="integration-icon w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-youtube text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">YouTube</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">Search, View Profiles, Track Feeds.</p>
+                </div>
+
+                <!-- Twitch -->
+                <div class="integration-card p-6 rounded-2xl stagger-item">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="integration-icon w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-twitch text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Twitch</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">Get stream notifications and status.</p>
+                </div>
+
+                <!-- TikTok -->
+                <div class="integration-card p-6 rounded-2xl stagger-item">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="integration-icon w-12 h-12 bg-black border border-white/20 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-tiktok text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">TikTok</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">Search profile, Track Feeds and Get notification post.</p>
+                </div>
+
+                <!-- Instagram -->
+                <div class="integration-card p-6 rounded-2xl stagger-item">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="integration-icon w-12 h-12 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-instagram text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Instagram</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">Search profile, Track Feeds and Get notification post and status.</p>
+                </div>
+
+                <!-- Spotify -->
+                <div class="integration-card p-6 rounded-2xl stagger-item">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="integration-icon w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-spotify text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Spotify</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">Play music and view profiles.</p>
+                </div>
+
+                <!-- SoundCloud -->
+                <div class="integration-card p-6 rounded-2xl stagger-item">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="integration-icon w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-soundcloud text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">SoundCloud</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">Stream music from SoundCloud.</p>
+                </div>
+
+                <!-- Reddit -->
+                <div class="integration-card p-6 rounded-2xl stagger-item">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="integration-icon w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-reddit text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Reddit</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">Get posts and notifications.</p>
+                </div>
+
+                <!-- Twitter/X -->
+                <div class="integration-card p-6 rounded-2xl stagger-item">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="integration-icon w-12 h-12 bg-black border border-white/20 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-x-twitter text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Twitter</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">Track tweets and notifications.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid Section -->
+    <section class="py-20 bg-gradient-to-b from-transparent to-purple-900/10 reveal">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-12">
+                <span class="gradient-text">Powerful Features</span>
+            </h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="feature-btn p-6 rounded-2xl">
+                    <div class="text-4xl mb-4 text-purple-400">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">AI Assistant</h3>
+                    <p class="text-gray-400">Chat with advanced AI models including GPT-4, Claude, and Gemini</p>
+                </div>
+
+                <div class="feature-btn p-6 rounded-2xl">
+                    <div class="text-4xl mb-4 text-purple-400">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Music Player</h3>
+                    <p class="text-gray-400">Play music from YouTube, Spotify, and SoundCloud with high quality</p>
+                </div>
+
+                <div class="feature-btn p-6 rounded-2xl">
+                    <div class="text-4xl mb-4 text-purple-400">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Moderation</h3>
+                    <p class="text-gray-400">Advanced moderation tools with AI-powered content analysis</p>
+                </div>
+
+                <div class="feature-btn p-6 rounded-2xl">
+                    <div class="text-4xl mb-4 text-purple-400">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Economy</h3>
+                    <p class="text-gray-400">Virtual currency system with shop, trading, and gambling</p>
+                </div>
+
+                <div class="feature-btn p-6 rounded-2xl">
+                    <div class="text-4xl mb-4 text-purple-400">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Leveling</h3>
+                    <p class="text-gray-400">XP and level system with customizable rewards and leaderboards</p>
+                </div>
+
+                <div class="feature-btn p-6 rounded-2xl">
+                    <div class="text-4xl mb-4 text-purple-400">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Tickets</h3>
+                    <p class="text-gray-400">Professional ticket system with transcripts and priority levels</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/5">
+        <div class="container mx-auto px-6 text-center text-gray-400">
+            <p id="footer-text">&copy; 2024 Discord Bot. All rights reserved.</p>
+        </div>
+    </footer>
+    </div>
+
+    <script>
+        // Hide loading screen when page is loaded
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+            }, 500);
+        });
+
+        // Scroll reveal animation
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.reveal');
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Check on load
+        
+        // Fetch bot info and update the page
+        async function loadBotInfo() {
+            try {
+                const response = await fetch('/api/bot-info');
+                const data = await response.json();
+                
+                // Update bot name
+                if (data.username) {
+                    document.getElementById('bot-name').textContent = data.username;
+                    document.getElementById('hero-bot-name').textContent = data.username;
+                    document.getElementById('page-title').textContent = `${data.username} - Home`;
+                    document.getElementById('footer-text').textContent = `© 2024 ${data.username}. All rights reserved.`;
+                }
+                
+                // Update bot avatar
+                if (data.avatar) {
+                    const avatarImg = document.getElementById('bot-avatar');
+                    const avatarPlaceholder = document.getElementById('bot-avatar-placeholder');
+                    avatarImg.src = data.avatar;
+                    avatarImg.classList.remove('hidden');
+                    avatarPlaceholder.classList.add('hidden');
+                }
+                
+                // Update stats with animation
+                animateNumber('guild-count', data.guilds || 0);
+                animateNumber('user-count', data.users || 0);
+                
+                // Update showcase stats
+                document.getElementById('showcase-count').textContent = formatNumber(data.users || 0);
+                document.getElementById('showcase-guilds').textContent = formatNumber(data.guilds || 0);
+                
+                // Load server showcase
+                if (data.topGuilds && data.topGuilds.length > 0) {
+                    loadServerShowcase(data.topGuilds);
+                }
+            } catch (error) {
+                console.error('Failed to load bot info:', error);
+            }
+        }
+        
+        // Animate numbers counting up
+        function animateNumber(elementId, target) {
+            const element = document.getElementById(elementId);
+            const duration = 2000;
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = formatNumber(target);
+                    clearInterval(timer);
+                } else {
+                    element.textContent = formatNumber(Math.floor(current));
+                }
+            }, 16);
+        }
+        
+        // Format numbers with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+        // Load server showcase
+        function loadServerShowcase(guilds) {
+            const showcase = document.getElementById('server-showcase');
+            
+            // Create server cards (duplicate for seamless loop)
+            const serverCards = guilds.concat(guilds).map(guild => {
+                const iconUrl = guild.icon || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                return `
+                    <div class="server-card flex-shrink-0 p-5 rounded-2xl">
+                        <div class="flex items-center space-x-4">
+                            <img src="${iconUrl}" alt="${guild.name}" class="w-14 h-14 rounded-full" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-lg truncate text-white">${escapeHtml(guild.name)}</h4>
+                                <p class="text-sm text-gray-400">${formatNumber(guild.members)} members</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            showcase.innerHTML = serverCards;
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Load bot info on page load
+        document.addEventListener('DOMContentLoaded', loadBotInfo);
+        
+        // Refresh bot info every 30 seconds
+        setInterval(loadBotInfo, 30000);
+    </script>
+</body>
+</html>

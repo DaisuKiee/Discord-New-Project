@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/layout-head') %>
+    <title>Tickets - <%= guildName %></title>
+    <style>
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .color-picker-wrapper input[type="color"] {
+            width: 50px;
+            height: 38px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+        }
+        .color-picker-wrapper input[type="text"] {
+            flex: 1;
+            font-family: monospace;
+        }
+        .embed-field {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .embed-field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .ticket-type-item {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .button-style-selector {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .button-style-option {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .button-style-option.active {
+            border-color: var(--primary);
+        }
+        .button-style-option.primary { background: #5865f2; color: white; }
+        .button-style-option.secondary { background: #4f545c; color: white; }
+        .button-style-option.success { background: #3ba55c; color: white; }
+        .button-style-option.danger { background: #ed4245; color: white; }
+        .preview-embed {
+            background: #2f3136;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .preview-embed-content {
+            padding: 12px 16px;
+        }
+        .preview-embed-footer {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #72767d;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .preview-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .preview-button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            border: none;
+            cursor: default;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .separator-line {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/loading', { loadingText: 'Loading ticket settings...' }) %>
+    
+    <div class="page-wrapper">
+        <%- include('../partials/dashboard-nav', { user }) %>
+        
+        <div class="dashboard-layout">
+            <%- include('../partials/sidebar', { guildId, guildName, guildIcon: typeof guildIcon !== 'undefined' ? guildIcon : null, activePage: 'tickets' }) %>
+            
+            <main class="main-content">
+                <div class="page-header slide-up">
+                    <div class="breadcrumb">
+                        <a href="/dashboard">Dashboard</a>
+                        <span>/</span>
+                        <a href="/dashboard/guild/<%= guildId %>"><%= guildName %></a>
+                        <span>/</span>
+                        <span>Tickets</span>
+                    </div>
+                    <h1><i class="fas fa-ticket-alt" style="color: #ec4899;"></i> Ticket System</h1>
+                    <p>Configure your support ticket system with custom embeds and buttons</p>
+                </div>
+
+                <div class="grid-2" style="gap: 2rem;">
+                    <!-- Left Column - Settings -->
+                    <div>
+                        <!-- Basic Settings -->
+                        <div class="card slide-up" style="animation-delay: 0.1s; margin-bottom: 1.5rem;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+                                    <i class="fas fa-cog" style="color: var(--primary);"></i> Basic Settings
+                                </h3>
+                                <div class="form-group">
+                                    <label class="form-label">Ticket Category</label>
+                                    <select id="ticketCategory" class="form-select">
+                                        <option value="">Select a category...</option>
+                                        <% categories.forEach(cat => { %>
+                                            <option value="<%= cat.id %>" <%= settings.ticketCategory === cat.id ? 'selected' : '' %>>
+                                                📁 <%= cat.name %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                    <p class="form-hint">New tickets will be created in this category</p>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Support Roles</label>
+                                    <select id="supportRoles" class="form-select" multiple style="height: 120px;">
+                                        <% roles.forEach(role => { %>
+                                            <option value="<%= role.id %>" style="color: <%= role.color %>" <%= settings.supportRoles && settings.supportRoles.includes(role.id) ? 'selected' : '' %>>
+                                                @<%= role.name %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                    <p class="form-hint">Hold Ctrl/Cmd to select multiple</p>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Panel Channel</label>
+                                    <select id="panelChannel" class="form-select">
+                                        <option value="">Select a channel...</option>
+                                        <% channels.forEach(ch => { %>
+                                            <option value="<%= ch.id %>" <%= settings.panelChannel === ch.id ? 'selected' : '' %>>
+                                                #<%= ch.name %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Embed Customization -->
+                        <div class="card slide-up" style="animation-delay: 0.2s; margin-bottom: 1.5rem;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+                                    <i class="fas fa-palette" style="color: #ec4899;"></i> Embed Customization
+                                </h3>
+                                <div class="form-group">
+                                    <label class="form-label">Embed Color</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="embedColor" value="<%= settings.embedColor || '#ec4899' %>">
+                                        <input type="text" id="embedColorText" class="form-input" value="<%= settings.embedColor || '#ec4899' %>" maxlength="7">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Title</label>
+                                    <input type="text" id="embedTitle" class="form-input" placeholder="🎫 Support Tickets" value="<%= settings.embedTitle || '🎫 Support Tickets' %>">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Description</label>
+                                    <textarea id="embedDescription" class="form-textarea" rows="3" placeholder="Need help? Create a ticket!"><%= settings.embedDescription || 'Need help? Click one of the buttons below to create a support ticket and our team will assist you as soon as possible!' %></textarea>
+                                </div>
+                                
+                                <!-- Embed Fields -->
+                                <div class="form-group">
+                                    <label class="form-label">Embed Fields (Optional)</label>
+                                    <div id="embedFields">
+                                        <% const fields = settings.embedFields || []; %>
+                                        <% fields.forEach((field, idx) => { %>
+                                            <div class="embed-field" data-field-id="<%= idx %>">
+                                                <div class="embed-field-header">
+                                                    <span style="font-weight: 500;">Field <%= idx + 1 %></span>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-field"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                                <input type="text" class="form-input field-name" placeholder="Field Name" value="<%= field.name %>" style="margin-bottom: 0.5rem;">
+                                                <textarea class="form-textarea field-value" rows="2" placeholder="Field Value"><%= field.value %></textarea>
+                                                <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.85rem;">
+                                                    <input type="checkbox" class="field-inline" <%= field.inline ? 'checked' : '' %>> Inline
+                                                </label>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                    <button id="addFieldBtn" class="btn btn-secondary" style="width: 100%;">
+                                        <i class="fas fa-plus"></i> Add Field
+                                    </button>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Footer Text (Optional)</label>
+                                    <input type="text" id="embedFooter" class="form-input" placeholder="Click a button to get started" value="<%= settings.embedFooter || '' %>">
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" id="showTimestamp" <%= settings.showTimestamp ? 'checked' : '' %>>
+                                        <span>Show Timestamp</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Types with Buttons -->
+                        <div class="card slide-up" style="animation-delay: 0.3s; margin-bottom: 1.5rem;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+                                    <i class="fas fa-tags" style="color: var(--warning);"></i> Ticket Types & Buttons
+                                </h3>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                                    Each ticket type creates a button. Customize the label, emoji, and style.
+                                </p>
+                                <div id="ticketTypes">
+                                    <% const types = settings.ticketTypes || [
+                                        { label: 'General Support', emoji: '❓', style: 'primary' },
+                                        { label: 'Technical Issue', emoji: '🔧', style: 'secondary' },
+                                        { label: 'Report', emoji: '🚨', style: 'danger' }
+                                    ]; %>
+                                    <% types.forEach((type, idx) => { %>
+                                        <div class="ticket-type-item" data-type-id="<%= idx %>">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                                <span style="font-weight: 500;">Type <%= idx + 1 %></span>
+                                                <button type="button" class="btn btn-danger btn-sm remove-type"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                            <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                                <input type="text" class="form-input type-label" placeholder="Button Label" value="<%= type.label %>">
+                                                <input type="text" class="form-input type-emoji" placeholder="Emoji" value="<%= type.emoji %>" style="width: 60px; text-align: center;">
+                                            </div>
+                                            <div>
+                                                <label class="form-label" style="font-size: 0.85rem;">Button Style</label>
+                                                <div class="button-style-selector">
+                                                    <div class="button-style-option primary <%= type.style === 'primary' ? 'active' : '' %>" data-style="primary">Primary</div>
+                                                    <div class="button-style-option secondary <%= type.style === 'secondary' ? 'active' : '' %>" data-style="secondary">Secondary</div>
+                                                    <div class="button-style-option success <%= type.style === 'success' ? 'active' : '' %>" data-style="success">Success</div>
+                                                    <div class="button-style-option danger <%= type.style === 'danger' ? 'active' : '' %>" data-style="danger">Danger</div>
+                                                </div>
+                                                <input type="hidden" class="type-style" value="<%= type.style || 'primary' %>">
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                                <button id="addTypeBtn" class="btn btn-secondary" style="width: 100%;">
+                                    <i class="fas fa-plus"></i> Add Ticket Type
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Additional Settings -->
+                        <div class="card slide-up" style="animation-delay: 0.4s;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+                                    <i class="fas fa-sliders-h" style="color: var(--success);"></i> Additional Settings
+                                </h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px; margin-bottom: 1rem;">
+                                    <div>
+                                        <strong>Transcripts</strong>
+                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Save conversations when closed</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" id="transcripts" <%= settings.transcripts ? 'checked' : '' %>>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px; margin-bottom: 1rem;">
+                                    <div>
+                                        <strong>Claim System</strong>
+                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Allow staff to claim tickets</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" id="claimSystem" <%= settings.claimSystem ? 'checked' : '' %>>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                    <div>
+                                        <strong>DM on Close</strong>
+                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Send transcript to user</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" id="dmOnClose" <%= settings.dmOnClose ? 'checked' : '' %>>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Preview -->
+                    <div>
+                        <div class="card slide-up" style="animation-delay: 0.2s; position: sticky; top: 100px;">
+                            <div class="card-body">
+                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+                                    <i class="fas fa-eye" style="color: var(--accent);"></i> Live Preview
+                                </h3>
+                                <div id="panelPreview" style="background: #36393f; border-radius: 8px; padding: 1rem;">
+                                    <div class="preview-embed" id="previewEmbed">
+                                        <div style="height: 4px; background: #ec4899;" id="previewColorBar"></div>
+                                        <div class="preview-embed-content">
+                                            <h4 id="previewTitle" style="color: #fff; font-weight: 600; margin-bottom: 8px;">🎫 Support Tickets</h4>
+                                            <p id="previewDescription" style="color: #dcddde; font-size: 14px; white-space: pre-wrap;">Need help? Click one of the buttons below to create a support ticket and our team will assist you as soon as possible!</p>
+                                            <div id="previewFields" style="margin-top: 12px;"></div>
+                                        </div>
+                                        <div class="preview-embed-footer" id="previewFooter" style="display: none;">
+                                            <span id="previewFooterText"></span>
+                                            <span id="previewTimestamp"></span>
+                                        </div>
+                                    </div>
+                                    <div class="preview-buttons" id="previewButtons">
+                                        <button class="preview-button" style="background: #5865f2; color: white;">❓ General Support</button>
+                                        <button class="preview-button" style="background: #4f545c; color: white;">🔧 Technical Issue</button>
+                                        <button class="preview-button" style="background: #ed4245; color: white;">🚨 Report</button>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+                                    <button id="sendPanelBtn" class="btn btn-primary" style="flex: 1;">
+                                        <i class="fas fa-paper-plane"></i> Send Panel
+                                    </button>
+                                    <button id="saveBtn" class="btn btn-success" style="flex: 1;">
+                                        <i class="fas fa-save"></i> Save Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+    <script>
+        const guildId = '<%= guildId %>';
+        
+        // Update preview function
+        function updatePreview() {
+            // Color
+            const color = document.getElementById('embedColor').value;
+            document.getElementById('previewColorBar').style.background = color;
+            
+            // Title & Description
+            document.getElementById('previewTitle').textContent = document.getElementById('embedTitle').value || '🎫 Support Tickets';
+            document.getElementById('previewDescription').textContent = document.getElementById('embedDescription').value || 'Click a button to create a ticket';
+            
+            // Fields
+            const fieldsContainer = document.getElementById('previewFields');
+            fieldsContainer.innerHTML = '';
+            document.querySelectorAll('.embed-field').forEach(field => {
+                const name = field.querySelector('.field-name').value;
+                const value = field.querySelector('.field-value').value;
+                const inline = field.querySelector('.field-inline').checked;
+                if (name || value) {
+                    const fieldEl = document.createElement('div');
+                    fieldEl.style.cssText = inline ? 'display: inline-block; width: 45%; margin-right: 5%; vertical-align: top;' : '';
+                    fieldEl.innerHTML = `
+                        <div style="color: #fff; font-weight: 600; font-size: 13px; margin-bottom: 2px;">${name}</div>
+                        <div style="color: #dcddde; font-size: 14px;">${value}</div>
+                    `;
+                    fieldsContainer.appendChild(fieldEl);
+                }
+            });
+            
+            // Footer
+            const footerText = document.getElementById('embedFooter').value;
+            const showTimestamp = document.getElementById('showTimestamp').checked;
+            const footerEl = document.getElementById('previewFooter');
+            if (footerText || showTimestamp) {
+                footerEl.style.display = 'flex';
+                footerEl.style.justifyContent = 'space-between';
+                document.getElementById('previewFooterText').textContent = footerText;
+                document.getElementById('previewTimestamp').textContent = showTimestamp ? new Date().toLocaleString() : '';
+            } else {
+                footerEl.style.display = 'none';
+            }
+            
+            // Buttons
+            const buttonsContainer = document.getElementById('previewButtons');
+            buttonsContainer.innerHTML = '';
+            document.querySelectorAll('.ticket-type-item').forEach(type => {
+                const label = type.querySelector('.type-label').value || 'Ticket';
+                const emoji = type.querySelector('.type-emoji').value;
+                const style = type.querySelector('.type-style').value;
+                
+                const colors = {
+                    primary: '#5865f2',
+                    secondary: '#4f545c',
+                    success: '#3ba55c',
+                    danger: '#ed4245'
+                };
+                
+                const btn = document.createElement('button');
+                btn.className = 'preview-button';
+                btn.style.background = colors[style] || colors.primary;
+                btn.style.color = 'white';
+                btn.innerHTML = emoji ? `${emoji} ${label}` : label;
+                buttonsContainer.appendChild(btn);
+            });
+        }
+
+        // Color picker sync
+        document.getElementById('embedColor').addEventListener('input', (e) => {
+            document.getElementById('embedColorText').value = e.target.value;
+            updatePreview();
+        });
+        document.getElementById('embedColorText').addEventListener('input', (e) => {
+            if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                document.getElementById('embedColor').value = e.target.value;
+                updatePreview();
+            }
+        });
+
+        // Live preview listeners
+        ['embedTitle', 'embedDescription', 'embedFooter'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+        });
+        document.getElementById('showTimestamp').addEventListener('change', updatePreview);
+
+        // Add embed field
+        let fieldCount = document.querySelectorAll('.embed-field').length;
+        document.getElementById('addFieldBtn').addEventListener('click', () => {
+            const container = document.getElementById('embedFields');
+            const div = document.createElement('div');
+            div.className = 'embed-field';
+            div.dataset.fieldId = fieldCount++;
+            div.innerHTML = `
+                <div class="embed-field-header">
+                    <span style="font-weight: 500;">Field ${fieldCount}</span>
+                    <button type="button" class="btn btn-danger btn-sm remove-field"><i class="fas fa-trash"></i></button>
+                </div>
+                <input type="text" class="form-input field-name" placeholder="Field Name" style="margin-bottom: 0.5rem;">
+                <textarea class="form-textarea field-value" rows="2" placeholder="Field Value"></textarea>
+                <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.85rem;">
+                    <input type="checkbox" class="field-inline"> Inline
+                </label>
+            `;
+            container.appendChild(div);
+            attachFieldListeners(div);
+        });
+
+        function attachFieldListeners(field) {
+            field.querySelector('.remove-field').addEventListener('click', () => {
+                field.remove();
+                updatePreview();
+            });
+            field.querySelectorAll('input, textarea').forEach(el => {
+                el.addEventListener('input', updatePreview);
+            });
+            field.querySelector('.field-inline').addEventListener('change', updatePreview);
+        }
+        document.querySelectorAll('.embed-field').forEach(attachFieldListeners);
+
+        // Add ticket type
+        let typeCount = document.querySelectorAll('.ticket-type-item').length;
+        document.getElementById('addTypeBtn').addEventListener('click', () => {
+            const container = document.getElementById('ticketTypes');
+            const div = document.createElement('div');
+            div.className = 'ticket-type-item';
+            div.dataset.typeId = typeCount++;
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <span style="font-weight: 500;">Type ${typeCount}</span>
+                    <button type="button" class="btn btn-danger btn-sm remove-type"><i class="fas fa-trash"></i></button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <input type="text" class="form-input type-label" placeholder="Button Label" value="New Ticket">
+                    <input type="text" class="form-input type-emoji" placeholder="Emoji" value="📩" style="width: 60px; text-align: center;">
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 0.85rem;">Button Style</label>
+                    <div class="button-style-selector">
+                        <div class="button-style-option primary active" data-style="primary">Primary</div>
+                        <div class="button-style-option secondary" data-style="secondary">Secondary</div>
+                        <div class="button-style-option success" data-style="success">Success</div>
+                        <div class="button-style-option danger" data-style="danger">Danger</div>
+                    </div>
+                    <input type="hidden" class="type-style" value="primary">
+                </div>
+            `;
+            container.appendChild(div);
+            attachTypeListeners(div);
+            updatePreview();
+        });
+
+        function attachTypeListeners(type) {
+            type.querySelector('.remove-type').addEventListener('click', () => {
+                type.remove();
+                updatePreview();
+            });
+            type.querySelectorAll('.type-label, .type-emoji').forEach(el => {
+                el.addEventListener('input', updatePreview);
+            });
+            type.querySelectorAll('.button-style-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    type.querySelectorAll('.button-style-option').forEach(o => o.classList.remove('active'));
+                    opt.classList.add('active');
+                    type.querySelector('.type-style').value = opt.dataset.style;
+                    updatePreview();
+                });
+            });
+        }
+        document.querySelectorAll('.ticket-type-item').forEach(attachTypeListeners);
+
+        // Send panel
+        document.getElementById('sendPanelBtn').addEventListener('click', async () => {
+            const channelId = document.getElementById('panelChannel').value;
+            if (!channelId) {
+                Toast.error('Please select a panel channel');
+                return;
+            }
+
+            const data = collectSettings();
+            data.channelId = channelId;
+
+            try {
+                const response = await fetch(`/api/guild/${guildId}/ticket-panel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    Toast.success('Ticket panel sent!');
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (error) {
+                Toast.error('Failed to send panel');
+            }
+        });
+
+        // Collect all settings
+        function collectSettings() {
+            const ticketTypes = [];
+            document.querySelectorAll('.ticket-type-item').forEach(type => {
+                ticketTypes.push({
+                    label: type.querySelector('.type-label').value,
+                    emoji: type.querySelector('.type-emoji').value,
+                    style: type.querySelector('.type-style').value
+                });
+            });
+
+            const embedFields = [];
+            document.querySelectorAll('.embed-field').forEach(field => {
+                const name = field.querySelector('.field-name').value;
+                const value = field.querySelector('.field-value').value;
+                if (name || value) {
+                    embedFields.push({
+                        name,
+                        value,
+                        inline: field.querySelector('.field-inline').checked
+                    });
+                }
+            });
+
+            return {
+                ticketCategory: document.getElementById('ticketCategory').value,
+                panelChannel: document.getElementById('panelChannel').value,
+                supportRoles: Array.from(document.getElementById('supportRoles').selectedOptions).map(o => o.value),
+                embedColor: document.getElementById('embedColor').value,
+                embedTitle: document.getElementById('embedTitle').value,
+                embedDescription: document.getElementById('embedDescription').value,
+                embedFields,
+                embedFooter: document.getElementById('embedFooter').value,
+                showTimestamp: document.getElementById('showTimestamp').checked,
+                ticketTypes,
+                transcripts: document.getElementById('transcripts').checked,
+                claimSystem: document.getElementById('claimSystem').checked,
+                dmOnClose: document.getElementById('dmOnClose').checked
+            };
+        }
+
+        // Save settings
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const data = collectSettings();
+            try {
+                const response = await fetch(`/api/guild/${guildId}/tickets`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    Toast.success('Settings saved!');
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (error) {
+                Toast.error('Failed to save settings');
+            }
+        });
+
+        // Initial preview
+        updatePreview();
+    </script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/layout-head') %>
+    <title>Modules - <%= guildName %></title>
+</head>
+<body>
+    <%- include('../partials/loading', { loadingText: 'Loading modules...' }) %>
+    
+    <div class="page-wrapper">
+        <%- include('../partials/dashboard-nav', { user }) %>
+        
+        <div class="dashboard-layout">
+            <%- include('../partials/sidebar', { guildId, guildName, guildIcon: typeof guildIcon !== 'undefined' ? guildIcon : null, activePage: 'modules' }) %>
+            
+            <main class="main-content">
+                <!-- Page Header -->
+                <div class="page-header slide-up">
+                    <div class="breadcrumb">
+                        <a href="/dashboard">Dashboard</a>
+                        <span>/</span>
+                        <a href="/dashboard/guild/<%= guildId %>"><%= guildName %></a>
+                        <span>/</span>
+                        <span>Modules</span>
+                    </div>
+                    <h1><i class="fas fa-puzzle-piece" style="color: var(--primary);"></i> Module Management</h1>
+                    <p>Enable or disable bot features for your server. Changes are saved automatically.</p>
+                </div>
+
+                <!-- Info Banner -->
+                <div class="slide-up" style="animation-delay: 0.1s; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.05)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-info-circle" style="color: #3b82f6; font-size: 1.25rem;"></i>
+                    <div>
+                        <strong>Pro Tip:</strong> Only enable modules you need. This keeps your bot fast and your commands list clean!
+                    </div>
+                </div>
+
+                <!-- Modules Grid -->
+                <div class="grid-3 stagger">
+                    <!-- Moderation Module -->
+                    <div class="card module-card <%= modules.moderation ? 'enabled' : '' %>" data-module="moderation">
+                        <div class="card-body">
+                            <div class="module-header">
+                                <div class="card-icon" style="background: rgba(239, 68, 68, 0.2); margin-bottom: 0;">
+                                    <i class="fas fa-shield-alt" style="color: var(--danger);"></i>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" class="module-toggle" data-module="moderation" <%= modules.moderation ? 'checked' : '' %>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <h3 class="card-title">Moderation</h3>
+                            <p class="card-desc">Ban, kick, mute, warn members and track moderation cases with detailed logs.</p>
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">
+                                    <i class="fas fa-terminal"></i> 15+ commands
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Economy Module -->
+                    <div class="card module-card <%= modules.economy ? 'enabled' : '' %>" data-module="economy">
+                        <div class="card-body">
+                            <div class="module-header">
+                                <div class="card-icon" style="background: rgba(16, 185, 129, 0.2); margin-bottom: 0;">
+                                    <i class="fas fa-coins" style="color: var(--success);"></i>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" class="module-toggle" data-module="economy" <%= modules.economy ? 'checked' : '' %>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <h3 class="card-title">Economy</h3>
+                            <p class="card-desc">Virtual currency system with work, daily rewards, gambling, shop, and trading.</p>
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">
+                                    <i class="fas fa-terminal"></i> 20+ commands
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leveling Module -->
+                    <div class="card module-card <%= modules.leveling ? 'enabled' : '' %>" data-module="leveling">
+                        <div class="card-body">
+                            <div class="module-header">
+                                <div class="card-icon" style="background: rgba(245, 158, 11, 0.2); margin-bottom: 0;">
+                                    <i class="fas fa-chart-line" style="color: var(--warning);"></i>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" class="module-toggle" data-module="leveling" <%= modules.leveling ? 'checked' : '' %>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <h3 class="card-title">Leveling & XP</h3>
+                            <p class="card-desc">XP system with levels, rank cards, role rewards, and server leaderboards.</p>
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">
+                                    <i class="fas fa-terminal"></i> 8+ commands
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Module -->
+                    <div class="card module-card <%= modules.ai ? 'enabled' : '' %>" data-module="ai">
+                        <div class="card-body">
+                            <div class="module-header">
+                                <div class="card-icon" style="background: rgba(139, 92, 246, 0.2); margin-bottom: 0;">
+                                    <i class="fas fa-brain" style="color: var(--primary-light);"></i>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" class="module-toggle" data-module="ai" <%= modules.ai ? 'checked' : '' %>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <h3 class="card-title">AI Assistant</h3>
+                            <p class="card-desc">Chat with AI powered by GPT-4, Claude, and Gemini. Image generation included.</p>
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">
+                                    <i class="fas fa-terminal"></i> 5+ commands
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tickets Module -->
+                    <div class="card module-card <%= modules.tickets ? 'enabled' : '' %>" data-module="tickets">
+                        <div class="card-body">
+                            <div class="module-header">
+                                <div class="card-icon" style="background: rgba(236, 72, 153, 0.2); margin-bottom: 0;">
+                                    <i class="fas fa-ticket-alt" style="color: #ec4899;"></i>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" class="module-toggle" data-module="tickets" <%= modules.tickets ? 'checked' : '' %>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <h3 class="card-title">Ticket System</h3>
+                            <p class="card-desc">Support tickets with categories, panels, claiming, and HTML transcripts.</p>
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">
+                                    <i class="fas fa-terminal"></i> 10+ commands
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Welcome Module -->
+                    <div class="card module-card <%= modules.welcome ? 'enabled' : '' %>" data-module="welcome">
+                        <div class="card-body">
+                            <div class="module-header">
+                                <div class="card-icon" style="background: rgba(59, 130, 246, 0.2); margin-bottom: 0;">
+                                    <i class="fas fa-hand-wave" style="color: #3b82f6;"></i>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" class="module-toggle" data-module="welcome" <%= modules.welcome ? 'checked' : '' %>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <h3 class="card-title">Welcome Messages</h3>
+                            <p class="card-desc">Greet new members with custom messages, embeds, images, and auto-roles.</p>
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">
+                                    <i class="fas fa-terminal"></i> 4+ commands
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Music Module -->
+                    <div class="card module-card <%= modules.music ? 'enabled' : '' %>" data-module="music">
+                        <div class="card-body">
+                            <div class="module-header">
+                                <div class="card-icon" style="background: rgba(168, 85, 247, 0.2); margin-bottom: 0;">
+                                    <i class="fas fa-music" style="color: #a855f7;"></i>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" class="module-toggle" data-module="music" <%= modules.music ? 'checked' : '' %>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <h3 class="card-title">Music Player</h3>
+                            <p class="card-desc">Play music from YouTube, Spotify, SoundCloud with queue, filters, and 24/7 mode.</p>
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">
+                                    <i class="fas fa-terminal"></i> 25+ commands
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fun Module -->
+                    <div class="card module-card <%= modules.fun ? 'enabled' : '' %>" data-module="fun">
+                        <div class="card-body">
+                            <div class="module-header">
+                                <div class="card-icon" style="background: rgba(251, 191, 36, 0.2); margin-bottom: 0;">
+                                    <i class="fas fa-gamepad" style="color: #fbbf24;"></i>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" class="module-toggle" data-module="fun" <%= modules.fun ? 'checked' : '' %>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <h3 class="card-title">Fun & Games</h3>
+                            <p class="card-desc">Memes, games, trivia, 8ball, and other fun commands for your community.</p>
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">
+                                    <i class="fas fa-terminal"></i> 15+ commands
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Utility Module -->
+                    <div class="card module-card <%= modules.utility ? 'enabled' : '' %>" data-module="utility">
+                        <div class="card-body">
+                            <div class="module-header">
+                                <div class="card-icon" style="background: rgba(34, 197, 94, 0.2); margin-bottom: 0;">
+                                    <i class="fas fa-tools" style="color: #22c55e;"></i>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" class="module-toggle" data-module="utility" <%= modules.utility ? 'checked' : '' %>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <h3 class="card-title">Utility</h3>
+                            <p class="card-desc">Server info, user info, avatar, reminders, polls, and other useful tools.</p>
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">
+                                    <i class="fas fa-terminal"></i> 12+ commands
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+    <script>
+        const guildId = '<%= guildId %>';
+        document.addEventListener('DOMContentLoaded', () => {
+            initModuleToggles(guildId);
+        });
+    </script>
+</body>
+</html>

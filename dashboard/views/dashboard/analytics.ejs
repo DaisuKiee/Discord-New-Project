@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/layout-head') %>
+    <title>Analytics - <%= guildName %></title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <%- include('../partials/loading', { loadingText: 'Loading analytics...' }) %>
+    
+    <div class="page-wrapper">
+        <%- include('../partials/dashboard-nav', { user }) %>
+        
+        <div class="dashboard-layout">
+            <%- include('../partials/sidebar', { guildId, guildName, guildIcon: typeof guildIcon !== 'undefined' ? guildIcon : null, activePage: 'analytics' }) %>
+            
+            <main class="main-content">
+                <!-- Page Header -->
+                <div class="page-header slide-up">
+                    <div class="breadcrumb">
+                        <a href="/dashboard">Dashboard</a>
+                        <span>/</span>
+                        <a href="/dashboard/guild/<%= guildId %>"><%= guildName %></a>
+                        <span>/</span>
+                        <span>Analytics</span>
+                    </div>
+                    <h1><i class="fas fa-chart-bar" style="color: var(--primary);"></i> Server Analytics</h1>
+                    <p>View detailed statistics and insights for your server</p>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="grid-4 stagger" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-members">0</div>
+                        <div class="stat-label"><i class="fas fa-users"></i> Total Members</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="online-members">0</div>
+                        <div class="stat-label"><i class="fas fa-circle" style="color: var(--success);"></i> Online Now</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="commands-today">0</div>
+                        <div class="stat-label"><i class="fas fa-terminal"></i> Commands Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="messages-today">0</div>
+                        <div class="stat-label"><i class="fas fa-comment"></i> Messages Today</div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="gap: 2rem; margin-bottom: 2rem;">
+                    <!-- Member Growth Chart -->
+                    <div class="card slide-up" style="animation-delay: 0.2s;">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-chart-line" style="color: var(--success);"></i>
+                                Member Growth (30 Days)
+                            </h3>
+                            <div style="height: 250px;">
+                                <canvas id="memberChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Command Usage Chart -->
+                    <div class="card slide-up" style="animation-delay: 0.3s;">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-terminal" style="color: var(--primary);"></i>
+                                Command Usage (7 Days)
+                            </h3>
+                            <div style="height: 250px;">
+                                <canvas id="commandChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="gap: 2rem;">
+                    <!-- Top Commands -->
+                    <div class="card slide-up" style="animation-delay: 0.4s;">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-trophy" style="color: var(--warning);"></i>
+                                Top Commands
+                            </h3>
+                            <div id="top-commands">
+                                <div class="skeleton" style="height: 40px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 40px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 40px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 40px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 40px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Channels -->
+                    <div class="card slide-up" style="animation-delay: 0.5s;">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-hashtag" style="color: #3b82f6;"></i>
+                                Most Active Channels
+                            </h3>
+                            <div id="active-channels">
+                                <div class="skeleton" style="height: 40px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 40px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 40px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 40px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 40px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Module Usage -->
+                    <div class="card slide-up" style="animation-delay: 0.6s;">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-puzzle-piece" style="color: var(--accent);"></i>
+                                Module Usage
+                            </h3>
+                            <div style="height: 200px;">
+                                <canvas id="moduleChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card slide-up" style="animation-delay: 0.7s;">
+                        <div class="card-body">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-clock" style="color: var(--danger);"></i>
+                                Recent Activity
+                            </h3>
+                            <div id="recent-activity" style="max-height: 250px; overflow-y: auto;">
+                                <div class="skeleton" style="height: 50px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 50px; margin-bottom: 0.75rem;"></div>
+                                <div class="skeleton" style="height: 50px; margin-bottom: 0.75rem;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+    <script>
+        const guildId = '<%= guildId %>';
+        let memberChart, commandChart, moduleChart;
+
+        // Load analytics data
+        async function loadAnalytics() {
+            try {
+                const response = await fetch(`/api/guild/${guildId}/analytics`);
+                const data = await response.json();
+                
+                // Update stats
+                animateNumber(document.getElementById('total-members'), data.totalMembers || 0);
+                animateNumber(document.getElementById('online-members'), data.onlineMembers || 0);
+                animateNumber(document.getElementById('commands-today'), data.commandsToday || 0);
+                animateNumber(document.getElementById('messages-today'), data.messagesToday || 0);
+                
+                // Update charts
+                updateMemberChart(data.memberGrowth || []);
+                updateCommandChart(data.commandUsage || []);
+                updateModuleChart(data.moduleUsage || {});
+                
+                // Update lists
+                updateTopCommands(data.topCommands || []);
+                updateActiveChannels(data.activeChannels || []);
+                updateRecentActivity(data.recentActivity || []);
+            } catch (error) {
+                console.error('Failed to load analytics:', error);
+            }
+        }
+
+        function updateMemberChart(data) {
+            const ctx = document.getElementById('memberChart').getContext('2d');
+            
+            if (memberChart) memberChart.destroy();
+            
+            memberChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Members',
+                        data: data.map(d => d.count),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: false, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } },
+                        x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+                    }
+                }
+            });
+        }
+
+        function updateCommandChart(data) {
+            const ctx = document.getElementById('commandChart').getContext('2d');
+            
+            if (commandChart) commandChart.destroy();
+            
+            commandChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Commands',
+                        data: data.map(d => d.count),
+                        backgroundColor: 'rgba(139, 92, 246, 0.6)',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } },
+                        x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+                    }
+                }
+            });
+        }
+
+        function updateModuleChart(data) {
+            const ctx = document.getElementById('moduleChart').getContext('2d');
+            
+            if (moduleChart) moduleChart.destroy();
+            
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+            const colors = ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899'];
+            
+            moduleChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: 'rgba(255,255,255,0.7)', padding: 15 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTopCommands(commands) {
+            const container = document.getElementById('top-commands');
+            if (commands.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No command data yet</p>';
+                return;
+            }
+            
+            const maxCount = Math.max(...commands.map(c => c.count));
+            container.innerHTML = commands.slice(0, 5).map((cmd, i) => `
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem;">
+                    <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600;">${i + 1}</span>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                            <span style="font-weight: 500;">/${cmd.name}</span>
+                            <span style="color: var(--text-muted);">${formatNumber(cmd.count)}</span>
+                        </div>
+                        <div style="height: 4px; background: rgba(139, 92, 246, 0.2); border-radius: 2px;">
+                            <div style="height: 100%; width: ${(cmd.count / maxCount) * 100}%; background: var(--primary); border-radius: 2px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateActiveChannels(channels) {
+            const container = document.getElementById('active-channels');
+            if (channels.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No channel data yet</p>';
+                return;
+            }
+            
+            const maxCount = Math.max(...channels.map(c => c.messages));
+            container.innerHTML = channels.slice(0, 5).map((ch, i) => `
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem;">
+                    <span style="width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600;">${i + 1}</span>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                            <span style="font-weight: 500;">#${ch.name}</span>
+                            <span style="color: var(--text-muted);">${formatNumber(ch.messages)} msgs</span>
+                        </div>
+                        <div style="height: 4px; background: rgba(59, 130, 246, 0.2); border-radius: 2px;">
+                            <div style="height: 100%; width: ${(ch.messages / maxCount) * 100}%; background: #3b82f6; border-radius: 2px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateRecentActivity(activities) {
+            const container = document.getElementById('recent-activity');
+            if (activities.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No recent activity</p>';
+                return;
+            }
+            
+            const icons = {
+                command: 'fa-terminal',
+                join: 'fa-user-plus',
+                leave: 'fa-user-minus',
+                moderation: 'fa-shield-alt'
+            };
+            
+            container.innerHTML = activities.slice(0, 10).map(act => `
+                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.05); border-radius: 8px; margin-bottom: 0.5rem;">
+                    <i class="fas ${icons[act.type] || 'fa-circle'}" style="color: var(--primary); width: 16px;"></i>
+                    <div style="flex: 1;">
+                        <span style="font-size: 0.9rem;">${act.description}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-dim); margin-left: 0.5rem;">${act.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load on page ready
+        document.addEventListener('DOMContentLoaded', loadAnalytics);
+    </script>
+</body>
+</html>

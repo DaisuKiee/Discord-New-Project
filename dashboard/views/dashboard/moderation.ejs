@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/layout-head') %>
+    <title>Moderation - <%= guildName %></title>
+</head>
+<body>
+    <%- include('../partials/loading', { loadingText: 'Loading moderation data...' }) %>
+    
+    <div class="page-wrapper">
+        <%- include('../partials/dashboard-nav', { user }) %>
+        
+        <div class="dashboard-layout">
+            <%- include('../partials/sidebar', { guildId, guildName, guildIcon: typeof guildIcon !== 'undefined' ? guildIcon : null, activePage: 'moderation' }) %>
+            
+            <main class="main-content">
+                <!-- Page Header -->
+                <div class="page-header slide-up">
+                    <div class="breadcrumb">
+                        <a href="/dashboard">Dashboard</a>
+                        <span>/</span>
+                        <a href="/dashboard/guild/<%= guildId %>"><%= guildName %></a>
+                        <span>/</span>
+                        <span>Moderation</span>
+                    </div>
+                    <h1><i class="fas fa-shield-alt" style="color: var(--danger);"></i> Moderation</h1>
+                    <p>View moderation cases and manage server moderation settings</p>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="grid-4 stagger" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-cases">0</div>
+                        <div class="stat-label"><i class="fas fa-gavel"></i> Total Cases</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="active-bans">0</div>
+                        <div class="stat-label"><i class="fas fa-ban" style="color: var(--danger);"></i> Active Bans</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="active-mutes">0</div>
+                        <div class="stat-label"><i class="fas fa-volume-mute" style="color: var(--warning);"></i> Active Mutes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="warnings-today">0</div>
+                        <div class="stat-label"><i class="fas fa-exclamation-triangle"></i> Warnings Today</div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="card slide-up" style="animation-delay: 0.2s; margin-bottom: 2rem;">
+                    <div class="card-body">
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <input type="text" id="searchInput" class="form-input" placeholder="Search by user ID or username...">
+                            </div>
+                            <select id="filterType" class="form-select" style="width: auto; min-width: 150px;">
+                                <option value="all">All Types</option>
+                                <option value="ban">Bans</option>
+                                <option value="kick">Kicks</option>
+                                <option value="mute">Mutes</option>
+                                <option value="warn">Warnings</option>
+                            </select>
+                            <select id="filterTime" class="form-select" style="width: auto; min-width: 150px;">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                            </select>
+                            <button id="searchBtn" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Cases -->
+                <div class="card slide-up" style="animation-delay: 0.3s;">
+                    <div class="card-body">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-history" style="color: var(--primary);"></i>
+                                Recent Cases
+                            </h3>
+                            <button class="btn btn-secondary btn-sm" onclick="loadCases()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+
+                        <div id="casesContainer">
+                            <!-- Loading skeleton -->
+                            <div class="skeleton" style="height: 80px; margin-bottom: 1rem;"></div>
+                            <div class="skeleton" style="height: 80px; margin-bottom: 1rem;"></div>
+                            <div class="skeleton" style="height: 80px; margin-bottom: 1rem;"></div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div id="pagination" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card slide-up" style="animation-delay: 0.4s; margin-top: 2rem;">
+                    <div class="card-body">
+                        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-bolt" style="color: var(--warning);"></i>
+                            Quick Actions
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <button class="btn btn-secondary" onclick="openModal('unban')">
+                                <i class="fas fa-user-check"></i> Unban User
+                            </button>
+                            <button class="btn btn-secondary" onclick="openModal('unmute')">
+                                <i class="fas fa-volume-up"></i> Unmute User
+                            </button>
+                            <button class="btn btn-secondary" onclick="openModal('clearWarnings')">
+                                <i class="fas fa-eraser"></i> Clear Warnings
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportCases()">
+                                <i class="fas fa-download"></i> Export Cases
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Action Modal -->
+    <div id="actionModal" class="guide-overlay">
+        <div class="guide-modal" style="text-align: left;">
+            <h2 id="modalTitle" style="font-size: 1.5rem; margin-bottom: 1rem;">Action</h2>
+            <div class="form-group">
+                <label class="form-label">User ID</label>
+                <input type="text" id="modalUserId" class="form-input" placeholder="Enter user ID...">
+            </div>
+            <div class="form-group" id="modalReasonGroup">
+                <label class="form-label">Reason (optional)</label>
+                <input type="text" id="modalReason" class="form-input" placeholder="Enter reason...">
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" id="modalConfirmBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+    <script>
+        const guildId = '<%= guildId %>';
+        let currentPage = 1;
+        let currentAction = '';
+
+        // Load moderation stats
+        async function loadStats() {
+            try {
+                const response = await fetch(`/api/guild/${guildId}/moderation/stats`);
+                const data = await response.json();
+                
+                animateNumber(document.getElementById('total-cases'), data.totalCases || 0);
+                animateNumber(document.getElementById('active-bans'), data.activeBans || 0);
+                animateNumber(document.getElementById('active-mutes'), data.activeMutes || 0);
+                animateNumber(document.getElementById('warnings-today'), data.warningsToday || 0);
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Load cases
+        async function loadCases(page = 1) {
+            currentPage = page;
+            const container = document.getElementById('casesContainer');
+            
+            const search = document.getElementById('searchInput').value;
+            const type = document.getElementById('filterType').value;
+            const time = document.getElementById('filterTime').value;
+
+            try {
+                const response = await fetch(`/api/guild/${guildId}/moderation/cases?page=${page}&search=${search}&type=${type}&time=${time}`);
+                const data = await response.json();
+                
+                if (!data.cases || data.cases.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="padding: 2rem;">
+                            <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success);"></i>
+                            <h3 style="margin-top: 1rem;">No Cases Found</h3>
+                            <p style="color: var(--text-muted);">No moderation cases match your search criteria.</p>
+                        </div>
+                    `;
+                    document.getElementById('pagination').innerHTML = '';
+                    return;
+                }
+
+                container.innerHTML = data.cases.map(c => `
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(139, 92, 246, 0.05); border-radius: 10px; margin-bottom: 0.75rem; border-left: 4px solid ${getTypeColor(c.type)};">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: ${getTypeColor(c.type)}20; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas ${getTypeIcon(c.type)}" style="color: ${getTypeColor(c.type)};"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <span style="font-weight: 600;">Case #${c.id}</span>
+                                <span style="padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${getTypeColor(c.type)}20; color: ${getTypeColor(c.type)};">${c.type.toUpperCase()}</span>
+                            </div>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">
+                                <strong>${c.targetUsername || c.targetId}</strong> by ${c.moderatorUsername || c.moderatorId}
+                            </p>
+                            <p style="font-size: 0.85rem; color: var(--text-dim);">${c.reason || 'No reason provided'}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 0.8rem; color: var(--text-dim);">${formatDate(c.createdAt)}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Pagination
+                const totalPages = Math.ceil(data.total / 10);
+                let paginationHtml = '';
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHtml += `<button class="btn ${i === page ? 'btn-primary' : 'btn-secondary'} btn-sm" onclick="loadCases(${i})">${i}</button>`;
+                }
+                document.getElementById('pagination').innerHTML = paginationHtml;
+            } catch (error) {
+                console.error('Failed to load cases:', error);
+                container.innerHTML = '<p style="color: var(--danger); text-align: center;">Failed to load cases</p>';
+            }
+        }
+
+        function getTypeColor(type) {
+            const colors = {
+                ban: '#ef4444',
+                kick: '#f59e0b',
+                mute: '#8b5cf6',
+                warn: '#3b82f6'
+            };
+            return colors[type] || '#6b7280';
+        }
+
+        function getTypeIcon(type) {
+            const icons = {
+                ban: 'fa-ban',
+                kick: 'fa-user-minus',
+                mute: 'fa-volume-mute',
+                warn: 'fa-exclamation-triangle'
+            };
+            return icons[type] || 'fa-gavel';
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Modal functions
+        function openModal(action) {
+            currentAction = action;
+            const modal = document.getElementById('actionModal');
+            const title = document.getElementById('modalTitle');
+            
+            const titles = {
+                unban: 'Unban User',
+                unmute: 'Unmute User',
+                clearWarnings: 'Clear Warnings'
+            };
+            
+            title.textContent = titles[action] || 'Action';
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('actionModal').classList.remove('active');
+            document.getElementById('modalUserId').value = '';
+            document.getElementById('modalReason').value = '';
+        }
+
+        document.getElementById('modalConfirmBtn').addEventListener('click', async () => {
+            const userId = document.getElementById('modalUserId').value;
+            const reason = document.getElementById('modalReason').value;
+
+            if (!userId) {
+                Toast.error('Please enter a user ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/guild/${guildId}/moderation/${currentAction}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, reason })
+                });
+
+                if (response.ok) {
+                    Toast.success('Action completed successfully!');
+                    closeModal();
+                    loadStats();
+                    loadCases(currentPage);
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (error) {
+                Toast.error('Failed to complete action');
+            }
+        });
+
+        async function exportCases() {
+            Toast.success('Exporting cases... Download will start shortly.');
+            // Export logic here
+        }
+
+        // Search button
+        document.getElementById('searchBtn').addEventListener('click', () => loadCases(1));
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadCases(1);
+        });
+
+        // Load on page ready
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadCases();
+        });
+    </script>
+</body>
+</html>

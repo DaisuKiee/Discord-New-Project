@@ -1,0 +1,41 @@
+<!-- Public Navbar (for non-dashboard pages) -->
+<nav class="dashboard-nav">
+    <div class="nav-container">
+        <!-- Brand -->
+        <a href="/" class="nav-brand">
+            <% if (typeof botAvatar !== 'undefined' && botAvatar) { %>
+                <img src="<%= botAvatar %>" alt="Bot">
+            <% } else { %>
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-robot"></i>
+                </div>
+            <% } %>
+            <span><%= typeof botName !== 'undefined' ? botName : 'Dashboard' %></span>
+        </a>
+
+        <!-- Nav Links -->
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/commands" class="nav-link">Commands</a>
+            <a href="/status" class="nav-link">Status</a>
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+        </div>
+
+        <!-- User Info -->
+        <div class="nav-user">
+            <% if (typeof user !== 'undefined' && user) { %>
+                <img src="<%= user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png' %>" 
+                     alt="<%= user.username %>" 
+                     class="user-avatar">
+                <span class="user-name"><%= user.username %></span>
+                <a href="/auth/logout" class="btn btn-danger btn-sm">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            <% } else { %>
+                <a href="/auth/login" class="btn btn-primary btn-sm">
+                    <i class="fab fa-discord"></i> Login
+                </a>
+            <% } %>
+        </div>
+    </div>
+</nav>

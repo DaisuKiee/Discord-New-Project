@@ -1,0 +1,88 @@
+<!-- Sidebar Navigation -->
+<aside class="sidebar">
+    <!-- Server Info -->
+    <div class="sidebar-section">
+        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; margin-bottom: 1rem;">
+            <% if (typeof guildIcon !== 'undefined' && guildIcon) { %>
+                <img src="<%= guildIcon %>" alt="Server" style="width: 40px; height: 40px; border-radius: 10px;">
+            <% } else { %>
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    <%= typeof guildName !== 'undefined' ? guildName.charAt(0) : 'S' %>
+                </div>
+            <% } %>
+            <div>
+                <div style="font-weight: 600; font-size: 0.95rem;"><%= typeof guildName !== 'undefined' ? guildName : 'Server' %></div>
+                <a href="/dashboard" style="font-size: 0.8rem; color: var(--primary-light); text-decoration: none;">
+                    <i class="fas fa-exchange-alt"></i> Switch
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <div class="sidebar-section">
+        <div class="sidebar-title">Main</div>
+        <a href="/dashboard/guild/<%= typeof guildId !== 'undefined' ? guildId : '' %>" 
+           class="sidebar-item <%= typeof activePage !== 'undefined' && activePage === 'overview' ? 'active' : '' %>">
+            <i class="fas fa-home"></i>
+            <span>Overview</span>
+        </a>
+        <a href="/dashboard/guild/<%= typeof guildId !== 'undefined' ? guildId : '' %>/modules" 
+           class="sidebar-item <%= typeof activePage !== 'undefined' && activePage === 'modules' ? 'active' : '' %>">
+            <i class="fas fa-puzzle-piece"></i>
+            <span>Modules</span>
+        </a>
+        <a href="/dashboard/guild/<%= typeof guildId !== 'undefined' ? guildId : '' %>/settings" 
+           class="sidebar-item <%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+    </div>
+
+    <!-- Features -->
+    <div class="sidebar-section">
+        <div class="sidebar-title">Features</div>
+        <a href="/dashboard/guild/<%= typeof guildId !== 'undefined' ? guildId : '' %>/moderation" 
+           class="sidebar-item <%= typeof activePage !== 'undefined' && activePage === 'moderation' ? 'active' : '' %>">
+            <i class="fas fa-shield-alt"></i>
+            <span>Moderation</span>
+        </a>
+        <a href="/dashboard/guild/<%= typeof guildId !== 'undefined' ? guildId : '' %>/welcome" 
+           class="sidebar-item <%= typeof activePage !== 'undefined' && activePage === 'welcome' ? 'active' : '' %>">
+            <i class="fas fa-hand-wave"></i>
+            <span>Welcome</span>
+        </a>
+        <a href="/dashboard/guild/<%= typeof guildId !== 'undefined' ? guildId : '' %>/tickets" 
+           class="sidebar-item <%= typeof activePage !== 'undefined' && activePage === 'tickets' ? 'active' : '' %>">
+            <i class="fas fa-ticket-alt"></i>
+            <span>Tickets</span>
+        </a>
+        <a href="/dashboard/guild/<%= typeof guildId !== 'undefined' ? guildId : '' %>/sticky" 
+           class="sidebar-item <%= typeof activePage !== 'undefined' && activePage === 'sticky' ? 'active' : '' %>">
+            <i class="fas fa-thumbtack"></i>
+            <span>Sticky Messages</span>
+        </a>
+    </div>
+
+    <!-- Analytics -->
+    <div class="sidebar-section">
+        <div class="sidebar-title">Insights</div>
+        <a href="/dashboard/guild/<%= typeof guildId !== 'undefined' ? guildId : '' %>/analytics" 
+           class="sidebar-item <%= typeof activePage !== 'undefined' && activePage === 'analytics' ? 'active' : '' %>">
+            <i class="fas fa-chart-bar"></i>
+            <span>Analytics</span>
+        </a>
+    </div>
+
+    <!-- Help -->
+    <div class="sidebar-section" style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border);">
+        <a href="#" class="sidebar-item" onclick="Guide.reset(); Guide.show(); return false;">
+            <i class="fas fa-question-circle"></i>
+            <span>Help & Tour</span>
+        </a>
+        <a href="/docs" class="sidebar-item">
+            <i class="fas fa-book"></i>
+            <span>Documentation</span>
+        </a>
+    </div>
+</aside>

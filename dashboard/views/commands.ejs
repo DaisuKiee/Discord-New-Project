@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Commands</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        body {
+            background: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(139, 92, 246, 0.2);
+            border-top-color: #a78bfa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .page-content {
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards;
+            animation-delay: 0.3s;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: rgba(255, 255, 255, 1);
+        }
+        .primary-btn {
+            background: #5865F2;
+            transition: all 0.3s ease;
+        }
+        .primary-btn:hover {
+            background: #4752C4;
+            transform: translateY(-2px);
+        }
+        
+        /* Category Pills */
+        .category-pill {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .category-pill:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+        .category-pill.active {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.6);
+        }
+        
+        /* Command Cards */
+        .command-card {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .command-card:hover {
+            background: rgba(40, 40, 40, 0.8);
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+        }
+        
+        /* Search Bar */
+        .search-bar {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .search-bar:focus {
+            outline: none;
+            border-color: rgba(139, 92, 246, 0.6);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        /* Fade In Animation */
+        .fade-in {
+            opacity: 0;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-in:nth-child(1) { animation-delay: 0.1s; }
+        .fade-in:nth-child(2) { animation-delay: 0.15s; }
+        .fade-in:nth-child(3) { animation-delay: 0.2s; }
+        .fade-in:nth-child(4) { animation-delay: 0.25s; }
+        .fade-in:nth-child(5) { animation-delay: 0.3s; }
+        .fade-in:nth-child(6) { animation-delay: 0.35s; }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader mb-6"></div>
+        <p class="text-gray-400 text-lg">Loading Commands...</p>
+    </div>
+
+    <div class="page-content">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <img id="bot-avatar" src="" alt="Bot" class="w-10 h-10 rounded-full hidden">
+                    <div id="bot-avatar-placeholder" class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <i class="fas fa-robot text-xl"></i>
+                    </div>
+                    <span id="bot-name" class="text-xl font-bold">Discord Bot</span>
+                </div>
+
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="nav-link font-medium">Home</a>
+                    <a href="/commands" class="nav-link font-medium active">Commands</a>
+                    <a href="/status" class="nav-link font-medium">Status</a>
+                    <a href="/docs" class="nav-link font-medium">Docs</a>
+                    <a href="/faq" class="nav-link font-medium">FAQ</a>
+                </div>
+
+                <div>
+                    <% if (user) { %>
+                        <a href="/dashboard" class="primary-btn px-6 py-2.5 rounded-lg font-semibold inline-flex items-center space-x-2">
+                            <i class="fab fa-discord"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    <% } else { %>
+                        <a href="/auth/login" class="primary-btn px-6 py-2.5 rounded-lg font-semibold inline-flex items-center space-x-2">
+                            <i class="fab fa-discord"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-32 pb-20">
+        <div class="container mx-auto px-6">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold mb-4">
+                    <span class="gradient-text">Bot Commands</span>
+                </h1>
+                <p class="text-gray-400 text-lg mb-8">Explore all available commands organized by category</p>
+                
+                <!-- Search Bar -->
+                <div class="max-w-2xl mx-auto relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        placeholder="Search commands..." 
+                        class="search-bar w-full pl-12 pr-4 py-4 rounded-xl text-white"
+                    >
+                </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="flex flex-wrap justify-center gap-3 mb-12" id="category-filter">
+                <button class="category-pill px-6 py-2 rounded-full font-semibold active" data-category="all">
+                    <i class="fas fa-th mr-2"></i>All Commands
+                </button>
+                <!-- Categories will be loaded here -->
+            </div>
+
+            <!-- Commands Grid -->
+            <div id="commands-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Loading placeholders -->
+                <div class="command-card p-6 rounded-2xl animate-pulse">
+                    <div class="h-6 bg-gray-700 rounded w-32 mb-4"></div>
+                    <div class="h-4 bg-gray-700 rounded mb-2"></div>
+                    <div class="h-4 bg-gray-700 rounded w-3/4"></div>
+                </div>
+                <div class="command-card p-6 rounded-2xl animate-pulse">
+                    <div class="h-6 bg-gray-700 rounded w-32 mb-4"></div>
+                    <div class="h-4 bg-gray-700 rounded mb-2"></div>
+                    <div class="h-4 bg-gray-700 rounded w-3/4"></div>
+                </div>
+                <div class="command-card p-6 rounded-2xl animate-pulse">
+                    <div class="h-6 bg-gray-700 rounded w-32 mb-4"></div>
+                    <div class="h-4 bg-gray-700 rounded mb-2"></div>
+                    <div class="h-4 bg-gray-700 rounded w-3/4"></div>
+                </div>
+            </div>
+
+            <!-- No Results -->
+            <div id="no-results" class="hidden text-center py-20">
+                <i class="fas fa-search text-6xl text-gray-600 mb-4"></i>
+                <h3 class="text-2xl font-bold text-gray-400 mb-2">No commands found</h3>
+                <p class="text-gray-500">Try adjusting your search or filter</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/5">
+        <div class="container mx-auto px-6 text-center text-gray-400">
+            <p id="footer-text">&copy; 2024 Discord Bot. All rights reserved.</p>
+        </div>
+    </footer>
+    </div>
+
+    <script>
+        let allCommands = [];
+        let currentCategory = 'all';
+
+        // Hide loading screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+            }, 500);
+        });
+
+        // Load bot info
+        async function loadBotInfo() {
+            try {
+                const response = await fetch('/api/bot-info');
+                const data = await response.json();
+                
+                if (data.username) {
+                    document.getElementById('bot-name').textContent = data.username;
+                    document.getElementById('page-title').textContent = `${data.username} - Commands`;
+                    document.getElementById('footer-text').textContent = `© 2024 ${data.username}. All rights reserved.`;
+                }
+                
+                if (data.avatar) {
+                    const avatarImg = document.getElementById('bot-avatar');
+                    const avatarPlaceholder = document.getElementById('bot-avatar-placeholder');
+                    avatarImg.src = data.avatar;
+                    avatarImg.classList.remove('hidden');
+                    avatarPlaceholder.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Failed to load bot info:', error);
+            }
+        }
+
+        // Load commands
+        async function loadCommands() {
+            try {
+                const response = await fetch('/api/commands');
+                const data = await response.json();
+                
+                allCommands = data.commands || [];
+                const categories = data.categories || [];
+                
+                // Load category filters
+                loadCategories(categories);
+                
+                // Display commands
+                displayCommands(allCommands);
+            } catch (error) {
+                console.error('Failed to load commands:', error);
+                document.getElementById('commands-container').innerHTML = `
+                    <div class="col-span-full text-center py-20">
+                        <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+                        <h3 class="text-2xl font-bold text-gray-400 mb-2">Failed to load commands</h3>
+                        <p class="text-gray-500">Please try again later</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load categories
+        function loadCategories(categories) {
+            const filter = document.getElementById('category-filter');
+            const allButton = filter.querySelector('[data-category="all"]');
+            
+            categories.forEach(category => {
+                const button = document.createElement('button');
+                button.className = 'category-pill px-6 py-2 rounded-full font-semibold';
+                button.dataset.category = category.name.toLowerCase();
+                button.innerHTML = `<i class="${category.icon} mr-2"></i>${category.name}`;
+                button.addEventListener('click', () => filterByCategory(category.name.toLowerCase()));
+                filter.appendChild(button);
+            });
+            
+            // All button click handler
+            allButton.addEventListener('click', () => filterByCategory('all'));
+        }
+
+        // Filter by category
+        function filterByCategory(category) {
+            currentCategory = category;
+            
+            // Update active state
+            document.querySelectorAll('.category-pill').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.category === category) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Filter commands
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            filterCommands(searchTerm);
+        }
+
+        // Display commands
+        function displayCommands(commands) {
+            const container = document.getElementById('commands-container');
+            const noResults = document.getElementById('no-results');
+            
+            if (commands.length === 0) {
+                container.classList.add('hidden');
+                noResults.classList.remove('hidden');
+                return;
+            }
+            
+            container.classList.remove('hidden');
+            noResults.classList.add('hidden');
+            
+            container.innerHTML = commands.map((cmd, index) => `
+                <div class="command-card p-6 rounded-2xl fade-in" style="animation-delay: ${index * 0.05}s">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-white">/${cmd.name}</h3>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background: ${getCategoryColor(cmd.category)}20; color: ${getCategoryColor(cmd.category)}">
+                            ${cmd.category}
+                        </span>
+                    </div>
+                    <p class="text-gray-400 mb-4">${cmd.description}</p>
+                    ${cmd.options && cmd.options.length > 0 ? `
+                        <div class="border-t border-white/5 pt-4">
+                            <p class="text-sm text-gray-500 mb-2">Options:</p>
+                            <div class="space-y-1">
+                                ${cmd.options.slice(0, 3).map(opt => `
+                                    <div class="text-sm">
+                                        <span class="text-purple-400">${opt.name}</span>
+                                        <span class="text-gray-500"> - ${opt.description}</span>
+                                    </div>
+                                `).join('')}
+                                ${cmd.options.length > 3 ? `<p class="text-xs text-gray-600">+${cmd.options.length - 3} more</p>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Filter commands
+        function filterCommands(searchTerm = '') {
+            let filtered = allCommands;
+            
+            // Filter by category
+            if (currentCategory !== 'all') {
+                filtered = filtered.filter(cmd => cmd.category.toLowerCase() === currentCategory);
+            }
+            
+            // Filter by search term
+            if (searchTerm) {
+                filtered = filtered.filter(cmd => 
+                    cmd.name.toLowerCase().includes(searchTerm) ||
+                    cmd.description.toLowerCase().includes(searchTerm) ||
+                    cmd.category.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            displayCommands(filtered);
+        }
+
+        // Get category color
+        function getCategoryColor(category) {
+            const colors = {
+                'moderation': '#ED4245',
+                'music': '#a78bfa',
+                'economy': '#57F287',
+                'fun': '#FEE75C',
+                'utility': '#5865F2',
+                'ai': '#c084fc',
+                'leveling': '#EB459E',
+                'tickets': '#00D9FF',
+                'admin': '#FF6B6B'
+            };
+            return colors[category.toLowerCase()] || '#a78bfa';
+        }
+
+        // Search input handler
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            filterCommands(e.target.value.toLowerCase());
+        });
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBotInfo();
+            loadCommands();
+        });
+    </script>
+</body>
+</html>
