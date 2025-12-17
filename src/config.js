@@ -60,11 +60,11 @@ export const config = {
     },
 
     logs: {
-        channel: process.env.LOG_CHANNEL_ID || "1325083073745911853", // General log channel
-        commands: process.env.COMMAND_LOG_CHANNEL_ID || "1314540720291450962", // Command usage logs
-        guildJoin: process.env.GUILD_JOIN_LOG_CHANNEL_ID || "1314540688494301195", // Server join logs
-        guildLeave: process.env.GUILD_LEAVE_LOG_CHANNEL_ID || "1314540688494301195", // Server leave logs
-        errors: process.env.ERROR_LOG_CHANNEL_ID || "1325083073745911853" // Error logs
+        channel: process.env.LOG_CHANNEL_ID || "1450801791221502022", // General log channel
+        commands: process.env.COMMAND_LOG_CHANNEL_ID || "1450801791221502022", // Command usage logs
+        guildJoin: process.env.GUILD_JOIN_LOG_CHANNEL_ID || "1450801770287861831", // Server join logs
+        guildLeave: process.env.GUILD_LEAVE_LOG_CHANNEL_ID || "1450801770287861831", // Server leave logs
+        errors: process.env.ERROR_LOG_CHANNEL_ID || "1450801791221502022" // Error logs
     },
     
     // Settings

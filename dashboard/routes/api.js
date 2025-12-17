@@ -34,22 +34,42 @@ router.get('/bot-info', async (req, res) => {
         }
         
         // Get bot info from all shards
-        const results = await manager.broadcastEval(client => ({
-            username: client.user?.username,
-            avatar: client.user?.displayAvatarURL({ size: 256 }),
-            id: client.user?.id,
-            guilds: client.guilds.cache.size,
-            users: client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0),
-            topGuilds: client.guilds.cache
-                .sort((a, b) => b.memberCount - a.memberCount)
-                .first(10)
-                .map(g => ({
-                    id: g.id,
-                    name: g.name,
-                    icon: g.iconURL({ size: 128 }),
-                    members: g.memberCount
-                }))
-        }));
+        const results = await manager.broadcastEval(async client => {
+            const topGuilds = await Promise.all(
+                client.guilds.cache
+                    .sort((a, b) => b.memberCount - a.memberCount)
+                    .first(10)
+                    .map(async g => {
+                        let owner = null;
+                        try {
+                            const ownerMember = await g.fetchOwner();
+                            owner = {
+                                id: ownerMember.user.id,
+                                username: ownerMember.user.username,
+                                avatar: ownerMember.user.displayAvatarURL({ size: 64 })
+                            };
+                        } catch (e) {}
+                        
+                        return {
+                            id: g.id,
+                            name: g.name,
+                            icon: g.iconURL({ size: 128 }),
+                            banner: g.bannerURL({ size: 512 }),
+                            members: g.memberCount,
+                            owner
+                        };
+                    })
+            );
+            
+            return {
+                username: client.user?.username,
+                avatar: client.user?.displayAvatarURL({ size: 256 }),
+                id: client.user?.id,
+                guilds: client.guilds.cache.size,
+                users: client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0),
+                topGuilds
+            };
+        });
         
         // Combine results from all shards
         const botInfo = {
@@ -244,6 +264,47 @@ router.get('/command-traffic', async (req, res) => {
             labels: [],
             values: []
         });
+    }
+});
+
+// Public endpoint for guild stats (real-time updates)
+router.get('/guild/:id/stats', async (req, res) => {
+    try {
+        const guildId = req.params.id;
+        const manager = global.shardManager;
+        
+        if (!manager) {
+            return res.json({
+                memberCount: 0,
+                channelCount: 0,
+                roleCount: 0,
+                commandsUsed: 0
+            });
+        }
+        
+        const results = await manager.broadcastEval((client, context) => {
+            const g = client.guilds.cache.get(context.guildId);
+            if (g) {
+                return {
+                    found: true,
+                    memberCount: g.memberCount,
+                    channelCount: g.channels.cache.size,
+                    roleCount: g.roles.cache.size
+                };
+            }
+            return { found: false };
+        }, { context: { guildId } });
+        
+        const foundGuild = results.find(r => r.found);
+        res.json({
+            memberCount: foundGuild?.memberCount || 0,
+            channelCount: foundGuild?.channelCount || 0,
+            roleCount: foundGuild?.roleCount || 0,
+            commandsUsed: 0
+        });
+    } catch (error) {
+        console.error('Guild stats error:', error);
+        res.status(500).json({ error: 'Failed to fetch stats' });
     }
 });
 
@@ -468,14 +529,242 @@ router.post('/guild/:id/tickets', async (req, res) => {
 router.post('/guild/:id/ticket-panel', async (req, res) => {
     try {
         const guildId = req.params.id;
-        const { channelId, message } = req.body;
+        const data = req.body;
         
-        // Here you would send the ticket panel message to Discord
-        // For now, just return success
-        res.json({ success: true });
+        const userGuilds = req.user.guilds.filter(g => (g.permissions & 0x20) === 0x20);
+        if (!userGuilds.find(g => g.id === guildId)) {
+            return res.status(403).json({ error: 'No permission' });
+        }
+
+        if (!data.channelId) {
+            return res.status(400).json({ error: 'Channel ID is required' });
+        }
+
+        const manager = global.shardManager;
+        if (!manager) {
+            return res.status(500).json({ error: 'Bot is not available' });
+        }
+
+        // Get existing panel message ID to delete
+        const existingGuild = await prisma.guild.findUnique({ where: { guildId } });
+        const existingSettings = existingGuild?.settings || {};
+        const parsedSettings = typeof existingSettings === 'string' ? JSON.parse(existingSettings) : existingSettings;
+        const oldPanelMessageId = parsedSettings.panelMessageId;
+        const oldPanelChannelId = parsedSettings.panelChannel;
+
+        // Send the ticket panel to Discord via the bot using Components v2
+        const results = await manager.broadcastEval(async (client, context) => {
+            const { 
+                ActionRowBuilder, 
+                ButtonBuilder, 
+                ButtonStyle, 
+                StringSelectMenuBuilder,
+                ContainerBuilder,
+                TextDisplayBuilder,
+                SeparatorBuilder,
+                SeparatorSpacingSize,
+                SectionBuilder,
+                ThumbnailBuilder,
+                MediaGalleryBuilder,
+                MediaGalleryItemBuilder,
+                MessageFlags
+            } = await import('discord.js');
+            
+            const guild = client.guilds.cache.get(context.guildId);
+            if (!guild) return { found: false };
+
+            const channel = guild.channels.cache.get(context.channelId);
+            if (!channel) return { found: true, error: 'Channel not found in server' };
+
+            // Check bot permissions
+            const botMember = guild.members.me;
+            if (!botMember) return { found: true, error: 'Bot member not found' };
+            
+            const permissions = channel.permissionsFor(botMember);
+            if (!permissions.has('SendMessages')) {
+                return { found: true, error: 'Bot lacks permission to send messages in this channel' };
+            }
+
+            try {
+                // Delete old panel message if exists
+                if (context.oldPanelMessageId && context.oldPanelChannelId) {
+                    try {
+                        const oldChannel = guild.channels.cache.get(context.oldPanelChannelId);
+                        if (oldChannel) {
+                            const oldMessage = await oldChannel.messages.fetch(context.oldPanelMessageId).catch(() => null);
+                            if (oldMessage) {
+                                await oldMessage.delete().catch(() => {});
+                            }
+                        }
+                    } catch (e) {
+                        // Ignore errors when deleting old panel
+                    }
+                }
+
+                // Build the panel using Components v2 (ContainerBuilder)
+                const container = new ContainerBuilder();
+
+                // Set accent color if provided
+                if (context.embedColor) {
+                    const colorInt = parseInt(context.embedColor.replace('#', ''), 16);
+                    container.setAccentColor(colorInt);
+                }
+
+                // Title with thumbnail if provided
+                if (context.embedThumbnail) {
+                    const section = new SectionBuilder();
+                    section.addTextDisplayComponents(
+                        new TextDisplayBuilder()
+                            .setContent(`## ${context.embedTitle || '🎫 Support Tickets'}`)
+                    );
+                    section.setThumbnailAccessory(
+                        new ThumbnailBuilder()
+                            .setURL(context.embedThumbnail)
+                    );
+                    container.addSectionComponents(section);
+                } else {
+                    container.addTextDisplayComponents(
+                        new TextDisplayBuilder()
+                            .setContent(`## ${context.embedTitle || '🎫 Support Tickets'}`)
+                    );
+                }
+
+                // Separator
+                container.addSeparatorComponents(
+                    new SeparatorBuilder()
+                        .setSpacing(SeparatorSpacingSize.Small)
+                        .setDivider(true)
+                );
+
+                // Description
+                container.addTextDisplayComponents(
+                    new TextDisplayBuilder()
+                        .setContent(context.embedDescription || 'Click a button below to create a support ticket!')
+                );
+
+                // Image if provided
+                if (context.embedImage) {
+                    const gallery = new MediaGalleryBuilder();
+                    gallery.addItems(
+                        new MediaGalleryItemBuilder()
+                            .setURL(context.embedImage)
+                    );
+                    container.addMediaGalleryComponents(gallery);
+                }
+
+                // Footer if provided
+                if (context.embedFooter || context.showTimestamp) {
+                    container.addSeparatorComponents(
+                        new SeparatorBuilder()
+                            .setSpacing(SeparatorSpacingSize.Small)
+                            .setDivider(true)
+                    );
+                    let footerText = context.embedFooter || '';
+                    if (context.showTimestamp) {
+                        const now = new Date().toLocaleString();
+                        footerText = footerText ? `${footerText} • ${now}` : now;
+                    }
+                    container.addTextDisplayComponents(
+                        new TextDisplayBuilder()
+                            .setContent(`-# ${footerText}`)
+                    );
+                }
+
+                const ticketTypes = context.ticketTypes || [
+                    { label: 'Create Ticket', emoji: '🎫', style: 'primary', description: '' }
+                ];
+
+                // Check panel style (buttons or dropdown)
+                if (context.panelStyle === 'dropdown') {
+                    // Build select menu
+                    const options = ticketTypes.map((type, index) => {
+                        const option = {
+                            label: type.label || 'Create Ticket',
+                            value: `ticket_create_${index}`,
+                            description: type.description || undefined
+                        };
+                        if (type.emoji) {
+                            option.emoji = type.emoji;
+                        }
+                        return option;
+                    });
+
+                    const selectMenu = new StringSelectMenuBuilder()
+                        .setCustomId('ticket_select')
+                        .setPlaceholder('Select a ticket type...')
+                        .addOptions(options);
+
+                    container.addActionRowComponents(new ActionRowBuilder().addComponents(selectMenu));
+                } else {
+                    // Build buttons
+                    let currentRow = new ActionRowBuilder();
+                    const buttonStyles = {
+                        primary: ButtonStyle.Primary,
+                        secondary: ButtonStyle.Secondary,
+                        success: ButtonStyle.Success,
+                        danger: ButtonStyle.Danger
+                    };
+
+                    ticketTypes.forEach((type, index) => {
+                        if (currentRow.components.length >= 5) {
+                            container.addActionRowComponents(currentRow);
+                            currentRow = new ActionRowBuilder();
+                        }
+
+                        const button = new ButtonBuilder()
+                            .setCustomId(`ticket_create_${index}`)
+                            .setLabel(type.label || 'Create Ticket')
+                            .setStyle(buttonStyles[type.style] || ButtonStyle.Primary);
+
+                        if (type.emoji) {
+                            button.setEmoji(type.emoji);
+                        }
+
+                        currentRow.addComponents(button);
+                    });
+
+                    if (currentRow.components.length > 0) {
+                        container.addActionRowComponents(currentRow);
+                    }
+                }
+
+                // Send the message with Components v2
+                const sentMessage = await channel.send({ 
+                    components: [container],
+                    flags: MessageFlags.IsComponentsV2
+                });
+
+                return { found: true, success: true, messageId: sentMessage.id };
+            } catch (err) {
+                console.error('Ticket panel send error:', err);
+                return { found: true, error: err.message };
+            }
+        }, { context: { guildId, oldPanelMessageId, oldPanelChannelId, ...data } });
+
+        const result = results.find(r => r.found);
+        if (!result) {
+            return res.status(404).json({ error: 'Guild not found - make sure the bot is in the server' });
+        }
+        if (result.error) {
+            return res.status(400).json({ error: result.error });
+        }
+
+        // Also save the settings with the new panel message ID
+        const guild = await prisma.guild.findUnique({ where: { guildId } });
+        let settings = guild?.settings || {};
+        if (typeof settings === 'string') settings = JSON.parse(settings);
+        settings = { ...settings, ...data, panelMessageId: result.messageId };
+
+        await prisma.guild.upsert({
+            where: { guildId },
+            update: { settings },
+            create: { guildId, settings }
+        });
+
+        res.json({ success: true, message: 'Ticket panel sent successfully' });
     } catch (error) {
         console.error('Ticket panel error:', error);
-        res.status(500).json({ error: 'Failed to send panel' });
+        res.status(500).json({ error: error.message || 'Failed to send panel' });
     }
 });
 

@@ -3,516 +3,344 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Discord Bot - Documentation</title>
+    <title id="page-title">Documentation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/dashboard.css">
     <style>
-        body {
-            background: #000000;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #030014; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: #fff; min-height: 100vh; }
+        
+        /* Loading Preloader */
+        .page-preloader { position: fixed; inset: 0; background: #030014; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease; }
+        .page-preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-spinner { width: 50px; height: 50px; border: 3px solid rgba(139, 92, 246, 0.2); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text { color: rgba(255, 255, 255, 0.6); font-size: 0.95rem; }
+        
+        .grid-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px); background-size: 60px 60px; z-index: 0; }
+        .orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.4; z-index: 0; }
+        .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%); top: -100px; right: -100px; }
+        .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%); bottom: -100px; left: -100px; }
+        
+        .content { position: relative; z-index: 10; }
+        
+        .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1rem 2rem; background: rgba(3, 0, 20, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(139, 92, 246, 0.1); }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+        .nav-brand img { width: 44px; height: 44px; border-radius: 12px; border: 2px solid rgba(139, 92, 246, 0.3); }
+        .nav-brand span { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-links a { color: rgba(255, 255, 255, 0.7); text-decoration: none; font-weight: 500; transition: all 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: #fff; }
+        .btn-glow { background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); padding: 12px 28px; border-radius: 12px; font-weight: 600; text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 8px; }
+        
+        .main { padding: 120px 2rem 60px; max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 280px 1fr; gap: 3rem; }
+        
+        .sidebar { position: sticky; top: 100px; height: fit-content; }
+        .sidebar-title { font-size: 0.8rem; font-weight: 600; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
+        .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+        .sidebar-link { padding: 12px 16px; border-radius: 12px; color: rgba(255, 255, 255, 0.6); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); color: #fff; }
+        .sidebar-link.active { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-left-color: #8b5cf6; }
+        .sidebar-link i { width: 20px; }
+        
+        .docs-content { min-width: 0; }
+        .page-header { margin-bottom: 3rem; }
+        .page-header h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; }
+        .gradient-text { background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: rgba(255, 255, 255, 0.6); font-size: 1.2rem; }
+        
+        .doc-section { display: none; }
+        .doc-section.active { display: block; }
+        
+        .doc-card { background: rgba(20, 20, 30, 0.6); border: 1px solid rgba(139, 92, 246, 0.1); border-radius: 20px; padding: 2rem; margin-bottom: 1.5rem; }
+        .doc-card h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 12px; }
+        .doc-card h2 i { color: #8b5cf6; }
+        .doc-card h3 { font-size: 1.1rem; font-weight: 600; color: #a78bfa; margin: 1.5rem 0 0.75rem; }
+        .doc-card p { color: rgba(255, 255, 255, 0.6); line-height: 1.8; margin-bottom: 1rem; }
+        .doc-card ul { color: rgba(255, 255, 255, 0.6); padding-left: 1.5rem; margin-bottom: 1rem; }
+        .doc-card li { margin-bottom: 0.5rem; }
+        
+        .code-block { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1rem 1.25rem; font-family: 'Fira Code', monospace; margin-bottom: 1rem; }
+        .code-block code { color: #22c55e; }
+        .code-block .comment { color: rgba(255, 255, 255, 0.4); }
+        
+        .footer { padding: 3rem 2rem; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center; color: rgba(255, 255, 255, 0.4); }
+        
+        /* Mobile Menu */
+        .mobile-menu-btn { display: none; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        .mobile-menu { display: none; position: fixed; top: 76px; left: 0; right: 0; background: rgba(3, 0, 20, 0.98); backdrop-filter: blur(20px); padding: 1rem; border-bottom: 1px solid rgba(139, 92, 246, 0.1); z-index: 99; max-height: 80vh; overflow-y: auto; }
+        .mobile-menu.open { display: block; }
+        .mobile-menu a { display: block; padding: 0.75rem 1rem; color: rgba(255, 255, 255, 0.7); text-decoration: none; border-radius: 8px; }
+        .mobile-menu a:hover, .mobile-menu a.active { background: rgba(139, 92, 246, 0.1); color: #fff; }
+        .mobile-menu a i { margin-right: 8px; width: 16px; }
+        
+        @media (max-width: 1024px) { 
+            .main { grid-template-columns: 1fr; padding: 110px 1.5rem 50px; } 
+            .sidebar { display: none; } 
         }
         
-        .gradient-text {
-            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        @media (max-width: 768px) {
+            .nav { padding: 0.875rem 1rem; }
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: block; }
+            .nav-brand span { font-size: 1.1rem; }
+            .btn-glow { padding: 10px 16px; font-size: 0.875rem; }
+            .main { padding: 100px 1rem 40px; gap: 1.5rem; }
+            .page-header { margin-bottom: 2rem; }
+            .page-header h1 { font-size: 1.875rem; }
+            .page-header p { font-size: 0.95rem; }
+            .doc-card { padding: 1.25rem; border-radius: 16px; margin-bottom: 1rem; }
+            .doc-card h2 { font-size: 1.15rem; gap: 10px; }
+            .doc-card h2 i { font-size: 0.9rem; }
+            .doc-card h3 { font-size: 1rem; margin: 1.25rem 0 0.5rem; }
+            .doc-card p { font-size: 0.9rem; line-height: 1.7; }
+            .doc-card ul { font-size: 0.9rem; padding-left: 1.25rem; }
+            .code-block { padding: 0.75rem 1rem; font-size: 0.8rem; overflow-x: auto; border-radius: 10px; }
+            .orb { opacity: 0.25; }
+            .orb-1 { width: 300px; height: 300px; top: -100px; right: -100px; }
+            .orb-2 { width: 250px; height: 250px; bottom: -100px; left: -100px; }
+            .footer { padding: 2rem 1rem; font-size: 0.85rem; }
         }
         
-        .nav-link {
-            color: rgba(255, 255, 255, 0.7);
-            transition: color 0.3s ease;
-        }
-        .nav-link:hover {
-            color: rgba(255, 255, 255, 1);
-        }
-        
-        .primary-btn {
-            background: #5865F2;
-            transition: all 0.3s ease;
-        }
-        .primary-btn:hover {
-            background: #4752C4;
-            transform: translateY(-2px);
-        }
-        
-        .doc-card {
-            background: rgba(30, 30, 30, 0.6);
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-        .doc-card:hover {
-            background: rgba(40, 40, 40, 0.8);
-            border-color: rgba(139, 92, 246, 0.5);
-            transform: translateY(-4px);
-        }
-
-        .sidebar-link {
-            color: rgba(255, 255, 255, 0.6);
-            transition: all 0.2s ease;
-            border-left: 2px solid transparent;
-        }
-        .sidebar-link:hover, .sidebar-link.active {
-            color: #a78bfa;
-            background: rgba(139, 92, 246, 0.1);
-            border-left-color: #a78bfa;
+        @media (max-width: 480px) {
+            .nav { padding: 0.75rem; }
+            .nav-brand img { width: 36px; height: 36px; border-radius: 10px; }
+            .nav-brand span { display: none; }
+            .btn-glow .btn-text { display: none; }
+            .btn-glow { padding: 10px 12px; }
+            .main { padding: 90px 0.875rem 30px; }
+            .page-header { margin-bottom: 1.5rem; }
+            .page-header h1 { font-size: 1.5rem; }
+            .page-header p { font-size: 0.875rem; }
+            .doc-card { padding: 1rem; border-radius: 14px; }
+            .doc-card h2 { font-size: 1.05rem; margin-bottom: 0.75rem; }
+            .doc-card h3 { font-size: 0.95rem; }
+            .doc-card p { font-size: 0.85rem; margin-bottom: 0.75rem; }
+            .doc-card ul { font-size: 0.85rem; }
+            .doc-card li { margin-bottom: 0.375rem; }
+            .code-block { padding: 0.625rem 0.875rem; font-size: 0.75rem; border-radius: 8px; }
+            .orb { opacity: 0.15; }
+            .orb-1 { width: 200px; height: 200px; }
+            .orb-2 { width: 150px; height: 150px; }
+            .footer { padding: 1.5rem 0.875rem; font-size: 0.8rem; }
+            .mobile-menu { padding: 0.75rem; }
+            .mobile-menu a { padding: 0.625rem 0.875rem; font-size: 0.9rem; }
         }
         
-        .code-block {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-family: 'Fira Code', 'Consolas', monospace;
-        }
-        
-        .doc-section {
-            display: none;
-        }
-        .doc-section.active {
-            display: block;
+        @media (max-width: 360px) {
+            .page-header h1 { font-size: 1.375rem; }
+            .doc-card { padding: 0.875rem; }
+            .doc-card h2 { font-size: 1rem; }
+            .code-block { font-size: 0.7rem; padding: 0.5rem 0.75rem; }
         }
     </style>
 </head>
-<body class="text-white min-h-screen">
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <img id="bot-avatar" src="" alt="Bot" class="w-10 h-10 rounded-full hidden">
-                    <div id="bot-avatar-placeholder" class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                        <i class="fas fa-robot text-xl"></i>
-                    </div>
-                    <span id="bot-name" class="text-xl font-bold">Discord Bot</span>
-                </div>
-
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="/" class="nav-link font-medium">Home</a>
-                    <a href="/commands" class="nav-link font-medium">Commands</a>
-                    <a href="/status" class="nav-link font-medium">Status</a>
-                    <a href="/docs" class="nav-link font-medium text-white">Docs</a>
-                    <a href="/faq" class="nav-link font-medium">FAQ</a>
-                </div>
-
-                <div>
-                    <% if (user) { %>
-                        <a href="/dashboard" class="primary-btn px-6 py-2.5 rounded-lg font-semibold inline-flex items-center space-x-2">
-                            <i class="fab fa-discord"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    <% } else { %>
-                        <a href="/auth/login" class="primary-btn px-6 py-2.5 rounded-lg font-semibold inline-flex items-center space-x-2">
-                            <i class="fab fa-discord"></i>
-                            <span>Login</span>
-                        </a>
-                    <% } %>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="pt-24 pb-12">
-        <div class="container mx-auto px-6">
-            <div class="flex gap-8">
-                <!-- Sidebar -->
-                <aside class="w-64 flex-shrink-0 hidden lg:block">
-                    <div class="sticky top-28">
-                        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Documentation</h3>
-                        <nav class="space-y-1">
-                            <a href="#getting-started" class="sidebar-link active block px-4 py-2 rounded-r-lg" data-section="getting-started">
-                                <i class="fas fa-rocket mr-2"></i> Getting Started
-                            </a>
-                            <a href="#commands" class="sidebar-link block px-4 py-2 rounded-r-lg" data-section="commands">
-                                <i class="fas fa-terminal mr-2"></i> Commands
-                            </a>
-                            <a href="#music" class="sidebar-link block px-4 py-2 rounded-r-lg" data-section="music">
-                                <i class="fas fa-music mr-2"></i> Music
-                            </a>
-                            <a href="#moderation" class="sidebar-link block px-4 py-2 rounded-r-lg" data-section="moderation">
-                                <i class="fas fa-shield-alt mr-2"></i> Moderation
-                            </a>
-                            <a href="#ai" class="sidebar-link block px-4 py-2 rounded-r-lg" data-section="ai">
-                                <i class="fas fa-brain mr-2"></i> AI Features
-                            </a>
-                            <a href="#tickets" class="sidebar-link block px-4 py-2 rounded-r-lg" data-section="tickets">
-                                <i class="fas fa-ticket-alt mr-2"></i> Tickets
-                            </a>
-                            <a href="#welcome" class="sidebar-link block px-4 py-2 rounded-r-lg" data-section="welcome">
-                                <i class="fas fa-door-open mr-2"></i> Welcome System
-                            </a>
-                            <a href="#leveling" class="sidebar-link block px-4 py-2 rounded-r-lg" data-section="leveling">
-                                <i class="fas fa-chart-line mr-2"></i> Leveling
-                            </a>
-                            <a href="#api" class="sidebar-link block px-4 py-2 rounded-r-lg" data-section="api">
-                                <i class="fas fa-code mr-2"></i> API Reference
-                            </a>
-                        </nav>
-                    </div>
-                </aside>
-
-                <!-- Main Content Area -->
-                <main class="flex-1 min-w-0">
-                    <div class="mb-8">
-                        <h1 class="text-4xl font-bold mb-2"><span class="gradient-text">Documentation</span></h1>
-                        <p class="text-gray-400">Learn how to use all the features and get the most out of the bot.</p>
-                    </div>
-
-                    <!-- Getting Started Section -->
-                    <section id="getting-started" class="doc-section active">
-                        <div class="doc-card rounded-2xl p-8 mb-6">
-                            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                                <i class="fas fa-rocket text-purple-400 mr-3"></i> Getting Started
-                            </h2>
-                            <p class="text-gray-300 mb-6">Welcome! Follow these steps to set up the bot in your server.</p>
-                            
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-2 text-purple-300">1. Invite the Bot</h3>
-                                    <p class="text-gray-400 mb-3">Click the invite button on the homepage or use the dashboard to add the bot to your server. Make sure you have the "Manage Server" permission.</p>
-                                </div>
-                                
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-2 text-purple-300">2. Set Up Permissions</h3>
-                                    <p class="text-gray-400 mb-3">Ensure the bot has the necessary permissions. We recommend giving it Administrator for full functionality, or at minimum:</p>
-                                    <ul class="list-disc list-inside text-gray-400 ml-4 space-y-1">
-                                        <li>Manage Messages</li>
-                                        <li>Manage Roles</li>
-                                        <li>Manage Channels</li>
-                                        <li>Send Messages</li>
-                                        <li>Embed Links</li>
-                                        <li>Connect & Speak (for music)</li>
-                                    </ul>
-                                </div>
-                                
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-2 text-purple-300">3. Configure via Dashboard</h3>
-                                    <p class="text-gray-400">Use the web dashboard to configure modules, set up welcome messages, configure moderation, and more. Simply log in with Discord and select your server.</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="doc-card rounded-2xl p-8">
-                            <h3 class="text-xl font-bold mb-4">Quick Commands</h3>
-                            <div class="code-block rounded-lg p-4 mb-4">
-                                <code class="text-green-400">/help</code> <span class="text-gray-500">- View all available commands</span>
-                            </div>
-                            <div class="code-block rounded-lg p-4 mb-4">
-                                <code class="text-green-400">/setup</code> <span class="text-gray-500">- Quick setup wizard</span>
-                            </div>
-                            <div class="code-block rounded-lg p-4">
-                                <code class="text-green-400">/config</code> <span class="text-gray-500">- View current configuration</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Commands Section -->
-                    <section id="commands" class="doc-section">
-                        <div class="doc-card rounded-2xl p-8 mb-6">
-                            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                                <i class="fas fa-terminal text-purple-400 mr-3"></i> Commands Overview
-                            </h2>
-                            <p class="text-gray-300 mb-6">The bot uses Discord's slash commands. Type <code class="bg-black/50 px-2 py-1 rounded">/</code> to see all available commands.</p>
-                            
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <div class="bg-black/30 rounded-xl p-4">
-                                    <h4 class="font-semibold text-purple-300 mb-2"><i class="fas fa-shield-alt mr-2"></i>Moderation</h4>
-                                    <p class="text-gray-400 text-sm">ban, kick, mute, warn, purge, slowmode</p>
-                                </div>
-                                <div class="bg-black/30 rounded-xl p-4">
-                                    <h4 class="font-semibold text-purple-300 mb-2"><i class="fas fa-music mr-2"></i>Music</h4>
-                                    <p class="text-gray-400 text-sm">play, skip, queue, pause, volume, loop</p>
-                                </div>
-                                <div class="bg-black/30 rounded-xl p-4">
-                                    <h4 class="font-semibold text-purple-300 mb-2"><i class="fas fa-brain mr-2"></i>AI</h4>
-                                    <p class="text-gray-400 text-sm">ask, imagine, chat, summarize</p>
-                                </div>
-                                <div class="bg-black/30 rounded-xl p-4">
-                                    <h4 class="font-semibold text-purple-300 mb-2"><i class="fas fa-tools mr-2"></i>Utility</h4>
-                                    <p class="text-gray-400 text-sm">avatar, userinfo, serverinfo, poll</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Music Section -->
-                    <section id="music" class="doc-section">
-                        <div class="doc-card rounded-2xl p-8 mb-6">
-                            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                                <i class="fas fa-music text-purple-400 mr-3"></i> Music System
-                            </h2>
-                            <p class="text-gray-300 mb-6">High-quality music playback from multiple sources including YouTube, Spotify, and SoundCloud.</p>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">Supported Sources</h3>
-                            <div class="flex flex-wrap gap-3 mb-6">
-                                <span class="bg-red-600/20 text-red-400 px-3 py-1 rounded-full text-sm"><i class="fab fa-youtube mr-1"></i> YouTube</span>
-                                <span class="bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-sm"><i class="fab fa-spotify mr-1"></i> Spotify</span>
-                                <span class="bg-orange-600/20 text-orange-400 px-3 py-1 rounded-full text-sm"><i class="fab fa-soundcloud mr-1"></i> SoundCloud</span>
-                            </div>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">Commands</h3>
-                            <div class="space-y-3">
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/play [query]</code> <span class="text-gray-500">- Play a song or add to queue</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/skip</code> <span class="text-gray-500">- Skip the current song</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/queue</code> <span class="text-gray-500">- View the current queue</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/volume [1-100]</code> <span class="text-gray-500">- Adjust playback volume</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/loop [off/track/queue]</code> <span class="text-gray-500">- Set loop mode</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Moderation Section -->
-                    <section id="moderation" class="doc-section">
-                        <div class="doc-card rounded-2xl p-8 mb-6">
-                            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                                <i class="fas fa-shield-alt text-purple-400 mr-3"></i> Moderation
-                            </h2>
-                            <p class="text-gray-300 mb-6">Powerful moderation tools to keep your server safe and organized.</p>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">Moderation Commands</h3>
-                            <div class="space-y-3 mb-6">
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/ban [user] [reason]</code> <span class="text-gray-500">- Ban a user from the server</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/kick [user] [reason]</code> <span class="text-gray-500">- Kick a user from the server</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/mute [user] [duration]</code> <span class="text-gray-500">- Timeout a user</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/warn [user] [reason]</code> <span class="text-gray-500">- Issue a warning</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/purge [amount]</code> <span class="text-gray-500">- Delete multiple messages</span>
-                                </div>
-                            </div>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">Auto-Moderation</h3>
-                            <p class="text-gray-400">Configure auto-mod through the dashboard to automatically detect and handle spam, inappropriate content, and more.</p>
-                        </div>
-                    </section>
-
-                    <!-- AI Section -->
-                    <section id="ai" class="doc-section">
-                        <div class="doc-card rounded-2xl p-8 mb-6">
-                            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                                <i class="fas fa-brain text-purple-400 mr-3"></i> AI Features
-                            </h2>
-                            <p class="text-gray-300 mb-6">Powered by advanced AI models including GPT-4, Claude, and Gemini.</p>
-                            
-                            <div class="space-y-3">
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/ask [question]</code> <span class="text-gray-500">- Ask the AI anything</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/imagine [prompt]</code> <span class="text-gray-500">- Generate images with AI</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/chat</code> <span class="text-gray-500">- Start a conversation thread</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/summarize</code> <span class="text-gray-500">- Summarize text or conversations</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Tickets Section -->
-                    <section id="tickets" class="doc-section">
-                        <div class="doc-card rounded-2xl p-8 mb-6">
-                            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                                <i class="fas fa-ticket-alt text-purple-400 mr-3"></i> Ticket System
-                            </h2>
-                            <p class="text-gray-300 mb-6">Professional support ticket system with transcripts and categories.</p>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">Setup</h3>
-                            <ol class="list-decimal list-inside text-gray-400 space-y-2 mb-6">
-                                <li>Go to Dashboard → Your Server → Tickets</li>
-                                <li>Set the ticket category (where tickets will be created)</li>
-                                <li>Configure support roles</li>
-                                <li>Send a ticket panel to a channel</li>
-                            </ol>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">Commands</h3>
-                            <div class="space-y-3">
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/ticket create</code> <span class="text-gray-500">- Create a new ticket</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/ticket close</code> <span class="text-gray-500">- Close the current ticket</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/ticket add [user]</code> <span class="text-gray-500">- Add a user to the ticket</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Welcome Section -->
-                    <section id="welcome" class="doc-section">
-                        <div class="doc-card rounded-2xl p-8 mb-6">
-                            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                                <i class="fas fa-door-open text-purple-400 mr-3"></i> Welcome System
-                            </h2>
-                            <p class="text-gray-300 mb-6">Greet new members with customizable welcome messages and embeds.</p>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">Variables</h3>
-                            <p class="text-gray-400 mb-3">Use these placeholders in your welcome messages:</p>
-                            <div class="grid md:grid-cols-2 gap-3">
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-yellow-400">{user}</code> <span class="text-gray-500">- Mentions the user</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-yellow-400">{username}</code> <span class="text-gray-500">- User's name</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-yellow-400">{server}</code> <span class="text-gray-500">- Server name</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-yellow-400">{membercount}</code> <span class="text-gray-500">- Member count</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Leveling Section -->
-                    <section id="leveling" class="doc-section">
-                        <div class="doc-card rounded-2xl p-8 mb-6">
-                            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                                <i class="fas fa-chart-line text-purple-400 mr-3"></i> Leveling System
-                            </h2>
-                            <p class="text-gray-300 mb-6">Engage your community with XP, levels, and rewards.</p>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">How It Works</h3>
-                            <ul class="list-disc list-inside text-gray-400 space-y-2 mb-6">
-                                <li>Members earn XP by chatting (with cooldown to prevent spam)</li>
-                                <li>XP accumulates to increase levels</li>
-                                <li>Configure role rewards for reaching certain levels</li>
-                                <li>Customize level-up announcements</li>
-                            </ul>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">Commands</h3>
-                            <div class="space-y-3">
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/rank</code> <span class="text-gray-500">- View your rank card</span>
-                                </div>
-                                <div class="code-block rounded-lg p-3">
-                                    <code class="text-green-400">/leaderboard</code> <span class="text-gray-500">- View server leaderboard</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- API Section -->
-                    <section id="api" class="doc-section">
-                        <div class="doc-card rounded-2xl p-8 mb-6">
-                            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                                <i class="fas fa-code text-purple-400 mr-3"></i> API Reference
-                            </h2>
-                            <p class="text-gray-300 mb-6">Public API endpoints for integrations.</p>
-                            
-                            <h3 class="text-lg font-semibold mb-3 text-purple-300">Endpoints</h3>
-                            <div class="space-y-4">
-                                <div class="bg-black/30 rounded-xl p-4">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="bg-green-600 text-xs px-2 py-1 rounded font-mono">GET</span>
-                                        <code class="text-gray-300">/api/bot-info</code>
-                                    </div>
-                                    <p class="text-gray-500 text-sm">Returns bot statistics (guilds, users, etc.)</p>
-                                </div>
-                                <div class="bg-black/30 rounded-xl p-4">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="bg-green-600 text-xs px-2 py-1 rounded font-mono">GET</span>
-                                        <code class="text-gray-300">/api/shard-status</code>
-                                    </div>
-                                    <p class="text-gray-500 text-sm">Returns status of all shards</p>
-                                </div>
-                                <div class="bg-black/30 rounded-xl p-4">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="bg-green-600 text-xs px-2 py-1 rounded font-mono">GET</span>
-                                        <code class="text-gray-300">/api/commands</code>
-                                    </div>
-                                    <p class="text-gray-500 text-sm">Returns list of all commands</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </main>
-            </div>
-        </div>
+<body>
+    <!-- Loading Preloader -->
+    <div class="page-preloader" id="pagePreloader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading documentation...</div>
     </div>
 
-    <!-- Footer -->
-    <footer class="py-12 border-t border-white/5">
-        <div class="container mx-auto px-6 text-center text-gray-400">
-            <p id="footer-text">&copy; 2024 Discord Bot. All rights reserved.</p>
+    <div class="grid-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    
+    <div class="content">
+        <nav class="nav">
+            <div class="nav-container">
+                <a href="/" class="nav-brand">
+                    <img id="bot-avatar" src="/images/bot-avatar.svg" alt="Bot">
+                    <span id="bot-name">Dashboard</span>
+                </a>
+                <div class="nav-links">
+                    <a href="/">Home</a>
+                    <a href="/commands">Commands</a>
+                    <a href="/status">Status</a>
+                    <a href="/docs" class="active">Docs</a>
+                    <a href="/faq">FAQ</a>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <% if (user) { %>
+                        <a href="/dashboard" class="btn-glow"><i class="fas fa-columns"></i> <span class="btn-text">Dashboard</span></a>
+                    <% } else { %>
+                        <a href="/auth/login" class="btn-glow"><i class="fab fa-discord"></i> <span class="btn-text">Login</span></a>
+                    <% } %>
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="/">Home</a>
+            <a href="/commands">Commands</a>
+            <a href="/status">Status</a>
+            <a href="/docs" class="active">Docs</a>
+            <a href="/faq">FAQ</a>
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 0.5rem; padding-top: 0.5rem;">
+                <a href="#getting-started" class="doc-nav-link" data-section="getting-started"><i class="fas fa-rocket"></i> Getting Started</a>
+                <a href="#commands" class="doc-nav-link" data-section="commands"><i class="fas fa-terminal"></i> Commands</a>
+                <a href="#music" class="doc-nav-link" data-section="music"><i class="fas fa-music"></i> Music</a>
+                <a href="#moderation" class="doc-nav-link" data-section="moderation"><i class="fas fa-shield-alt"></i> Moderation</a>
+                <a href="#ai" class="doc-nav-link" data-section="ai"><i class="fas fa-brain"></i> AI Features</a>
+                <a href="#tickets" class="doc-nav-link" data-section="tickets"><i class="fas fa-ticket-alt"></i> Tickets</a>
+                <a href="#api" class="doc-nav-link" data-section="api"><i class="fas fa-code"></i> API</a>
+            </div>
         </div>
-    </footer>
-
+        
+        <main class="main">
+            <aside class="sidebar">
+                <div class="sidebar-title">Documentation</div>
+                <nav class="sidebar-nav">
+                    <a href="#getting-started" class="sidebar-link active" data-section="getting-started"><i class="fas fa-rocket"></i> Getting Started</a>
+                    <a href="#commands" class="sidebar-link" data-section="commands"><i class="fas fa-terminal"></i> Commands</a>
+                    <a href="#music" class="sidebar-link" data-section="music"><i class="fas fa-music"></i> Music</a>
+                    <a href="#moderation" class="sidebar-link" data-section="moderation"><i class="fas fa-shield-alt"></i> Moderation</a>
+                    <a href="#ai" class="sidebar-link" data-section="ai"><i class="fas fa-brain"></i> AI Features</a>
+                    <a href="#tickets" class="sidebar-link" data-section="tickets"><i class="fas fa-ticket-alt"></i> Tickets</a>
+                    <a href="#api" class="sidebar-link" data-section="api"><i class="fas fa-code"></i> API</a>
+                </nav>
+            </aside>
+            
+            <div class="docs-content">
+                <div class="page-header">
+                    <h1><span class="gradient-text">Documentation</span></h1>
+                    <p>Everything you need to know about using the bot</p>
+                </div>
+                
+                <section id="getting-started" class="doc-section active">
+                    <div class="doc-card">
+                        <h2><i class="fas fa-rocket"></i> Getting Started</h2>
+                        <p>Welcome! Follow these steps to set up the bot in your server.</p>
+                        <h3>1. Invite the Bot</h3>
+                        <p>Click the invite button on the homepage to add the bot. Make sure you have "Manage Server" permission.</p>
+                        <h3>2. Set Up Permissions</h3>
+                        <p>The bot needs these permissions for full functionality:</p>
+                        <ul>
+                            <li>Manage Messages, Roles, Channels</li>
+                            <li>Send Messages, Embed Links</li>
+                            <li>Connect & Speak (for music)</li>
+                        </ul>
+                        <h3>3. Quick Commands</h3>
+                        <div class="code-block"><code>/help</code> <span class="comment">- View all commands</span></div>
+                        <div class="code-block"><code>/setup</code> <span class="comment">- Quick setup wizard</span></div>
+                    </div>
+                </section>
+                
+                <section id="commands" class="doc-section">
+                    <div class="doc-card">
+                        <h2><i class="fas fa-terminal"></i> Commands Overview</h2>
+                        <p>All commands use Discord's slash command system. Type <code>/</code> to see available commands.</p>
+                        <h3>Command Categories</h3>
+                        <ul>
+                            <li><strong>Moderation:</strong> ban, kick, mute, warn, purge</li>
+                            <li><strong>Music:</strong> play, skip, queue, volume, loop</li>
+                            <li><strong>AI:</strong> ask, imagine, chat, summarize</li>
+                            <li><strong>Utility:</strong> avatar, userinfo, serverinfo</li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <section id="music" class="doc-section">
+                    <div class="doc-card">
+                        <h2><i class="fas fa-music"></i> Music System</h2>
+                        <p>High-quality music from YouTube, Spotify, and SoundCloud.</p>
+                        <h3>Commands</h3>
+                        <div class="code-block"><code>/play [query]</code> <span class="comment">- Play a song</span></div>
+                        <div class="code-block"><code>/skip</code> <span class="comment">- Skip current song</span></div>
+                        <div class="code-block"><code>/queue</code> <span class="comment">- View queue</span></div>
+                        <div class="code-block"><code>/volume [1-100]</code> <span class="comment">- Adjust volume</span></div>
+                    </div>
+                </section>
+                
+                <section id="moderation" class="doc-section">
+                    <div class="doc-card">
+                        <h2><i class="fas fa-shield-alt"></i> Moderation</h2>
+                        <p>Powerful tools to keep your server safe.</p>
+                        <div class="code-block"><code>/ban [user] [reason]</code></div>
+                        <div class="code-block"><code>/kick [user] [reason]</code></div>
+                        <div class="code-block"><code>/mute [user] [duration]</code></div>
+                        <div class="code-block"><code>/warn [user] [reason]</code></div>
+                    </div>
+                </section>
+                
+                <section id="ai" class="doc-section">
+                    <div class="doc-card">
+                        <h2><i class="fas fa-brain"></i> AI Features</h2>
+                        <p>Powered by GPT-4, Claude, and Gemini.</p>
+                        <div class="code-block"><code>/ask [question]</code> <span class="comment">- Ask AI anything</span></div>
+                        <div class="code-block"><code>/imagine [prompt]</code> <span class="comment">- Generate images</span></div>
+                    </div>
+                </section>
+                
+                <section id="tickets" class="doc-section">
+                    <div class="doc-card">
+                        <h2><i class="fas fa-ticket-alt"></i> Ticket System</h2>
+                        <p>Professional support tickets with transcripts.</p>
+                        <div class="code-block"><code>/ticket create</code></div>
+                        <div class="code-block"><code>/ticket close</code></div>
+                        <div class="code-block"><code>/ticket add [user]</code></div>
+                    </div>
+                </section>
+                
+                <section id="api" class="doc-section">
+                    <div class="doc-card">
+                        <h2><i class="fas fa-code"></i> API Reference</h2>
+                        <p>Public API endpoints for integrations.</p>
+                        <div class="code-block"><code>GET /api/bot-info</code> <span class="comment">- Bot statistics</span></div>
+                        <div class="code-block"><code>GET /api/shard-status</code> <span class="comment">- Shard status</span></div>
+                        <div class="code-block"><code>GET /api/commands</code> <span class="comment">- Command list</span></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p id="footer-text">&copy; 2024 Discord Bot. All rights reserved.</p>
+        </footer>
+    </div>
+    
     <script>
-        // Sidebar navigation
-        document.querySelectorAll('.sidebar-link').forEach(link => {
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('open');
+        }
+        
+        function switchSection(section) {
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            document.querySelector(`.sidebar-link[data-section="${section}"]`)?.classList.add('active');
+            document.querySelectorAll('.doc-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            document.getElementById('mobileMenu').classList.remove('open');
+        }
+        
+        document.querySelectorAll('.sidebar-link, .doc-nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const section = link.dataset.section;
-                
-                // Update active states
-                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                
-                // Show/hide sections
-                document.querySelectorAll('.doc-section').forEach(s => s.classList.remove('active'));
-                document.getElementById(section).classList.add('active');
-                
-                // Update URL hash
-                history.pushState(null, null, `#${section}`);
+                switchSection(link.dataset.section);
             });
         });
         
-        // Handle direct URL hash navigation
-        if (window.location.hash) {
-            const section = window.location.hash.substring(1);
-            const link = document.querySelector(`[data-section="${section}"]`);
-            if (link) {
-                link.click();
-            }
-        }
-        
-        // Fetch bot info
         async function loadBotInfo() {
             try {
-                const response = await fetch('/api/bot-info');
-                const data = await response.json();
-                
+                const res = await fetch('/api/bot-info');
+                const data = await res.json();
                 if (data.username) {
                     document.getElementById('bot-name').textContent = data.username;
                     document.getElementById('page-title').textContent = `${data.username} - Documentation`;
                     document.getElementById('footer-text').textContent = `© 2024 ${data.username}. All rights reserved.`;
                 }
-                
-                if (data.avatar) {
-                    const avatarImg = document.getElementById('bot-avatar');
-                    const avatarPlaceholder = document.getElementById('bot-avatar-placeholder');
-                    avatarImg.src = data.avatar;
-                    avatarImg.classList.remove('hidden');
-                    avatarPlaceholder.classList.add('hidden');
-                }
-            } catch (error) {
-                console.error('Failed to load bot info:', error);
-            }
+                if (data.avatar) document.getElementById('bot-avatar').src = data.avatar;
+            } catch (e) {}
         }
+        
+        // Hide preloader when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('pagePreloader').classList.add('hidden');
+            }, 800);
+        });
         
         loadBotInfo();
     </script>

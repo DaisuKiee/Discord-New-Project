@@ -6,3 +6,30 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+    // Fetch and display bot profile on all dashboard pages
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch('/api/bot-info');
+            const data = await response.json();
+            
+            // Update nav bot avatar and name
+            const navAvatar = document.getElementById('nav-bot-avatar');
+            const navName = document.getElementById('nav-bot-name');
+            
+            if (navAvatar && data.avatar) {
+                navAvatar.src = data.avatar;
+            }
+            if (navName && data.username) {
+                navName.textContent = data.username;
+            }
+            
+            // Update page title if it contains "Dashboard"
+            if (data.username && document.title.includes('Dashboard')) {
+                document.title = document.title.replace('Dashboard', data.username);
+            }
+        } catch (error) {
+            console.error('Failed to fetch bot info:', error);
+        }
+    });
+</script>

@@ -1,16 +1,15 @@
 <!-- Dashboard Navigation -->
 <nav class="dashboard-nav">
     <div class="nav-container">
+        <!-- Mobile Sidebar Toggle -->
+        <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        
         <!-- Brand -->
         <a href="/" class="nav-brand">
-            <% if (typeof botAvatar !== 'undefined' && botAvatar) { %>
-                <img src="<%= botAvatar %>" alt="Bot">
-            <% } else { %>
-                <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-robot"></i>
-                </div>
-            <% } %>
-            <span><%= typeof botName !== 'undefined' ? botName : 'Dashboard' %></span>
+            <img id="nav-bot-avatar" src="/images/bot-avatar.svg" alt="Bot" style="width: 40px; height: 40px; border-radius: 50%;">
+            <span id="nav-bot-name">Dashboard</span>
         </a>
 
         <!-- Nav Links -->
@@ -39,3 +38,13 @@
         </div>
     </div>
 </nav>
+
+<!-- Sidebar Overlay for Mobile -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<script>
+function toggleSidebar() {
+    document.querySelector('.sidebar')?.classList.toggle('open');
+    document.querySelector('.sidebar-overlay')?.classList.toggle('active');
+}
+</script>

@@ -574,13 +574,53 @@ body {
 
 @media (max-width: 992px) {
     .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
-    .sidebar { display: none; }
-    .main-content { margin-left: 0; max-width: 100%; }
+    .sidebar { 
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .main-content { margin-left: 0; max-width: 100%; padding: 1.5rem; }
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 49;
+    }
+    .sidebar-overlay.active {
+        display: block;
+    }
 }
 
 @media (max-width: 768px) {
     .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
     .nav-links { display: none; }
+    .nav-container { padding: 0.875rem 1rem; }
+    .nav-brand { font-size: 1.1rem; }
+    .nav-brand img { width: 36px; height: 36px; }
+    .user-name { display: none; }
+    .page-header h1 { font-size: 1.5rem; }
+    .page-header p { font-size: 0.9rem; }
+    .main-content { padding: 1rem; }
+    .card-body { padding: 1.25rem; }
+    .stat-value { font-size: 2rem; }
+    .btn { padding: 0.625rem 1rem; font-size: 0.9rem; }
+}
+
+@media (max-width: 480px) {
+    .nav-container { padding: 0.75rem; }
+    .nav-brand span { display: none; }
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 { font-size: 1.35rem; }
+    .card-body { padding: 1rem; }
+    .stat-card { padding: 1rem; }
+    .stat-value { font-size: 1.75rem; }
+    .form-input, .form-select, .form-textarea { padding: 0.75rem; font-size: 0.95rem; }
+    .toast-container { bottom: 1rem; right: 1rem; left: 1rem; }
+    .toast { min-width: auto; width: 100%; }
+    .btn-text { display: none; }
 }
 
 /* ===== Guide/Tooltip System ===== */
@@ -1111,15 +1151,20 @@ body {
     background: transparent;
     border: none;
     color: var(--text);
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+@media (max-width: 992px) {
+    .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 768px) {
-    .mobile-menu-btn {
-        display: block;
-    }
-    
     .nav-links {
         display: none;
         position: absolute;

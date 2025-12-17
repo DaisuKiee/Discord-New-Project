@@ -25,6 +25,27 @@
                     <p>Manage your server's bot settings and features</p>
                 </div>
 
+                <% if (typeof botInGuild !== 'undefined' && !botInGuild) { %>
+                <!-- Bot Not In Server Message -->
+                <div class="card slide-up" style="margin-bottom: 2rem; border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.05);">
+                    <div class="card-body" style="text-align: center; padding: 3rem 2rem;">
+                        <div style="width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-robot" style="font-size: 2.5rem; color: #f59e0b;"></i>
+                        </div>
+                        <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.75rem;">Bot Not in Server</h2>
+                        <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1.5rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                            Invite <span id="invite-bot-name" style="color: var(--primary-light); font-weight: 600;">the bot</span> first to manage <strong><%= guildName %></strong>
+                        </p>
+                        <a href="/auth/login?guild=<%= guildId %>" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                            <i class="fab fa-discord"></i> Invite Bot to Server
+                        </a>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 1rem;">
+                            After inviting, refresh this page to access the dashboard
+                        </p>
+                    </div>
+                </div>
+                <% } else { %>
+
                 <!-- Quick Stats -->
                 <div class="grid-4 stagger" style="margin-bottom: 2rem;">
                     <div class="stat-card">
@@ -161,12 +182,105 @@
                         </div>
                     </div>
                 </div>
+                <% } %>
             </main>
         </div>
     </div>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="/js/dashboard.js"></script>
     <script>
+        const guildId = '<%= guildId %>';
+        
+        // Socket.io real-time updates
+        const socket = io();
+        
+        socket.on('connect', () => {
+            console.log('Connected to real-time updates');
+            socket.emit('joinGuild', guildId);
+        });
+        
+        // Listen for guild-specific updates
+        socket.on('guildUpdate', (data) => {
+            if (data.memberCount !== undefined) {
+                updateStatCard(0, data.memberCount);
+            }
+            if (data.channelCount !== undefined) {
+                updateStatCard(1, data.channelCount);
+            }
+            if (data.roleCount !== undefined) {
+                updateStatCard(2, data.roleCount);
+            }
+            if (data.commandsUsed !== undefined) {
+                updateStatCard(3, data.commandsUsed);
+            }
+        });
+        
+        function updateStatCard(index, value) {
+            const cards = document.querySelectorAll('.stat-card .stat-value');
+            if (cards[index]) {
+                const current = parseInt(cards[index].textContent.replace(/,/g, '')) || 0;
+                if (current !== value) {
+                    animateValue(cards[index], current, value, 500);
+                }
+            }
+        }
+        
+        function animateValue(element, start, end, duration) {
+            const range = end - start;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const current = Math.round(start + range * easeProgress);
+                element.textContent = current.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            requestAnimationFrame(update);
+        }
+        
+        // Fetch fresh stats periodically
+        async function refreshStats() {
+            try {
+                const response = await fetch(`/api/guild/${guildId}/stats`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.memberCount) updateStatCard(0, data.memberCount);
+                    if (data.channelCount) updateStatCard(1, data.channelCount);
+                    if (data.roleCount) updateStatCard(2, data.roleCount);
+                    if (data.commandsUsed) updateStatCard(3, data.commandsUsed);
+                }
+            } catch (error) {
+                // Silent fail
+            }
+        }
+        
+        // Refresh stats every 30 seconds
+        setInterval(refreshStats, 30000);
+        
+        // Cleanup on page leave
+        window.addEventListener('beforeunload', () => {
+            socket.emit('leaveGuild', guildId);
+        });
+
+        // Fetch bot name for invite message
+        async function loadBotName() {
+            try {
+                const res = await fetch('/api/bot-info');
+                const data = await res.json();
+                const botNameEl = document.getElementById('invite-bot-name');
+                if (botNameEl && data.username) {
+                    botNameEl.textContent = data.username;
+                }
+            } catch (e) {}
+        }
+        loadBotName();
+
         // Initialize guide for first-time users
         document.addEventListener('DOMContentLoaded', () => {
             Guide.init([

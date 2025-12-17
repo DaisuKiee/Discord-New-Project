@@ -128,8 +128,16 @@ export default class InteractionCreate extends Event {
         const customId = interaction.customId;
 
         try {
+            // Ticket Panel Create Buttons (from dashboard)
+            if (customId.startsWith('ticket_create_')) {
+                const typeIndex = parseInt(customId.split('_')[2]);
+                await this.handleTicketCreate(interaction, typeIndex);
+                return;
+            }
+
             // Ticket System Buttons
             if (customId === 'ticket_close') {
+                const { prisma } = await import('../../utils/database.js');
                 const ticketId = parseInt(interaction.channel.topic?.match(/Ticket #(\d+)/)?.[1]);
                 
                 if (!ticketId) {
@@ -138,26 +146,51 @@ export default class InteractionCreate extends Event {
 
                 await interaction.deferReply();
 
-                const ticket = await client.tickets.closeTicket(
-                    ticketId,
-                    interaction.guild.id,
-                    interaction.user.tag
-                );
+                // Update ticket status in database
+                await prisma.ticket.updateMany({
+                    where: { guildId: interaction.guild.id, ticketId: ticketId },
+                    data: { status: 'closed', closedAt: new Date() }
+                });
 
-                if (ticket) {
-                    const embed = new EmbedBuilder()
-                        .setColor(client.color.success)
-                        .setTitle('🔒 Ticket Closed')
-                        .setDescription(`Ticket #${ticketId} has been closed by ${interaction.user}`)
-                        .setTimestamp();
+                const embed = new EmbedBuilder()
+                    .setColor('#ed4245')
+                    .setTitle('🔒 Ticket Closed')
+                    .setDescription(`This ticket has been closed by ${interaction.user}\n\nThis channel will be deleted in 5 seconds.`)
+                    .setTimestamp();
 
-                    await interaction.editReply({ embeds: [embed] });
+                await interaction.editReply({ embeds: [embed] });
 
-                    // Delete channel after 5 seconds
-                    setTimeout(() => {
-                        interaction.channel.delete().catch(() => {});
-                    }, 5000);
+                // Delete channel after 5 seconds
+                setTimeout(() => {
+                    interaction.channel.delete().catch(() => {});
+                }, 5000);
+            }
+
+            // Ticket Claim Button
+            if (customId === 'ticket_claim') {
+                const { prisma } = await import('../../utils/database.js');
+                
+                // Check if user has support role
+                const guildData = await prisma.guild.findUnique({
+                    where: { guildId: interaction.guild.id }
+                });
+
+                let settings = guildData?.settings || {};
+                if (typeof settings === 'string') settings = JSON.parse(settings);
+
+                const supportRoles = settings.supportRoles || [];
+                const hasRole = supportRoles.some(roleId => interaction.member.roles.cache.has(roleId));
+
+                if (!hasRole && !interaction.member.permissions.has('ManageChannels')) {
+                    return interaction.reply({ content: '❌ You do not have permission to claim tickets!', ephemeral: true });
                 }
+
+                const embed = new EmbedBuilder()
+                    .setColor('#3ba55c')
+                    .setDescription(`✋ This ticket has been claimed by ${interaction.user}`)
+                    .setTimestamp();
+
+                await interaction.reply({ embeds: [embed] });
             }
 
             // Music Control Buttons
@@ -302,7 +335,15 @@ export default class InteractionCreate extends Event {
                 });
             }
 
-            // Ticket Category Select
+            // Ticket Category Select (from dashboard panel)
+            if (customId === 'ticket_select') {
+                const value = values[0]; // ticket_create_0, ticket_create_1, etc.
+                const typeIndex = parseInt(value.split('_')[2]);
+                await this.handleTicketCreate(interaction, typeIndex);
+                return;
+            }
+
+            // Ticket Category Select (legacy)
             if (customId === 'ticket_category') {
                 const category = values[0];
                 
@@ -332,11 +373,305 @@ export default class InteractionCreate extends Event {
         }
     }
 
+    async handleTicketCreate(interaction, typeIndex) {
+        const client = interaction.client;
+        const { prisma } = await import('../../utils/database.js');
+        const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ChannelType, PermissionFlagsBits, EmbedBuilder } = await import('discord.js');
+
+        try {
+            // Get guild settings
+            const guildData = await prisma.guild.findUnique({
+                where: { guildId: interaction.guild.id }
+            });
+
+            let settings = guildData?.settings || {};
+            if (typeof settings === 'string') settings = JSON.parse(settings);
+
+            const ticketTypes = settings.ticketTypes || [{ label: 'Support', emoji: '🎫' }];
+            const ticketType = ticketTypes[typeIndex] || ticketTypes[0];
+
+            // Check if user already has an open ticket
+            const existingTicket = await prisma.ticket.findFirst({
+                where: {
+                    guildId: interaction.guild.id,
+                    userId: interaction.user.id,
+                    status: 'open'
+                }
+            });
+
+            if (existingTicket) {
+                return interaction.reply({
+                    content: `❌ You already have an open ticket! <#${existingTicket.channelId}>`,
+                    ephemeral: true
+                });
+            }
+
+            // Check if ticket type has modal questions
+            if (ticketType.questions && ticketType.questions.length > 0) {
+                const modal = new ModalBuilder()
+                    .setCustomId(`ticket_modal_${typeIndex}`)
+                    .setTitle(ticketType.label || 'Create Ticket');
+
+                ticketType.questions.slice(0, 5).forEach((q, idx) => {
+                    const input = new TextInputBuilder()
+                        .setCustomId(`question_${idx}`)
+                        .setLabel(q.label.substring(0, 45))
+                        .setStyle(q.type === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short)
+                        .setRequired(q.required || false)
+                        .setMaxLength(q.type === 'paragraph' ? 1000 : 100);
+
+                    if (q.placeholder) {
+                        input.setPlaceholder(q.placeholder.substring(0, 100));
+                    }
+
+                    modal.addComponents(new ActionRowBuilder().addComponents(input));
+                });
+
+                return interaction.showModal(modal);
+            }
+
+            // No modal questions, create ticket directly
+            await this.createTicketChannel(interaction, ticketType, typeIndex, null);
+
+        } catch (error) {
+            client.logger.error('Ticket Create Error:', error);
+            const errorMsg = { content: '❌ Failed to create ticket. Please try again.', ephemeral: true };
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply(errorMsg).catch(() => {});
+            } else {
+                await interaction.reply(errorMsg).catch(() => {});
+            }
+        }
+    }
+
+    async createTicketChannel(interaction, ticketType, typeIndex, modalResponses) {
+        const client = interaction.client;
+        const { prisma } = await import('../../utils/database.js');
+        const { 
+            ChannelType, 
+            PermissionFlagsBits, 
+            ActionRowBuilder, 
+            ButtonBuilder, 
+            ButtonStyle,
+            ContainerBuilder,
+            TextDisplayBuilder,
+            SeparatorBuilder,
+            SeparatorSpacingSize,
+            MessageFlags
+        } = await import('discord.js');
+
+        await interaction.deferReply({ ephemeral: true });
+
+        try {
+            // Get guild settings
+            const guildData = await prisma.guild.findUnique({
+                where: { guildId: interaction.guild.id }
+            });
+
+            let settings = guildData?.settings || {};
+            if (typeof settings === 'string') settings = JSON.parse(settings);
+
+            // Get ticket count for naming
+            const ticketCount = await prisma.ticket.count({
+                where: { guildId: interaction.guild.id }
+            });
+
+            const ticketNumber = ticketCount + 1;
+            
+            // Build channel name from custom format or default
+            const channelFormat = ticketType.channelFormat || 'ticket-{number}-{username}';
+            const channelName = channelFormat
+                .replace('{number}', ticketNumber)
+                .replace('{username}', interaction.user.username)
+                .replace('{type}', ticketType.label || 'ticket')
+                .toLowerCase()
+                .replace(/[^a-z0-9-]/g, '')
+                .substring(0, 100); // Discord channel name limit
+
+            // Permission overwrites
+            const permissionOverwrites = [
+                {
+                    id: interaction.guild.id,
+                    deny: [PermissionFlagsBits.ViewChannel]
+                },
+                {
+                    id: interaction.user.id,
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory]
+                },
+                {
+                    id: client.user.id,
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels]
+                }
+            ];
+
+            // Add support roles
+            if (settings.supportRoles && settings.supportRoles.length > 0) {
+                for (const roleId of settings.supportRoles) {
+                    permissionOverwrites.push({
+                        id: roleId,
+                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory]
+                    });
+                }
+            }
+
+            // Create channel
+            const channel = await interaction.guild.channels.create({
+                name: channelName,
+                type: ChannelType.GuildText,
+                parent: settings.ticketCategory || null,
+                topic: `Ticket #${ticketNumber} | Created by ${interaction.user.tag} | Type: ${ticketType.label}`,
+                permissionOverwrites
+            });
+
+            // Create ticket in database
+            await prisma.ticket.create({
+                data: {
+                    ticketId: ticketNumber,
+                    guildId: interaction.guild.id,
+                    channelId: channel.id,
+                    userId: interaction.user.id,
+                    category: ticketType.label,
+                    status: 'open'
+                }
+            });
+
+            // Build welcome message using Components v2 (ContainerBuilder)
+            const container = new ContainerBuilder();
+
+            // Title section
+            container.addTextDisplayComponents(
+                new TextDisplayBuilder()
+                    .setContent(`## ${ticketType.emoji || '🎫'} ${ticketType.label || 'Support Ticket'}`)
+            );
+
+            container.addSeparatorComponents(
+                new SeparatorBuilder()
+                    .setSpacing(SeparatorSpacingSize.Small)
+                    .setDivider(true)
+            );
+
+            // Welcome message
+            container.addTextDisplayComponents(
+                new TextDisplayBuilder()
+                    .setContent(`Hello ${interaction.user}! Thank you for creating a ticket.\n\nPlease describe your issue and our support team will assist you shortly.`)
+            );
+
+            // Ticket info
+            container.addTextDisplayComponents(
+                new TextDisplayBuilder()
+                    .setContent(`**Ticket Number:** #${ticketNumber}`)
+            );
+
+            // Add modal responses if any
+            if (modalResponses && modalResponses.length > 0) {
+                const ticketTypes = settings.ticketTypes || [];
+                const questions = ticketTypes[typeIndex]?.questions || [];
+
+                container.addSeparatorComponents(
+                    new SeparatorBuilder()
+                        .setSpacing(SeparatorSpacingSize.Small)
+                        .setDivider(true)
+                );
+
+                container.addTextDisplayComponents(
+                    new TextDisplayBuilder()
+                        .setContent('**📋 Submitted Information**')
+                );
+
+                modalResponses.forEach((response, idx) => {
+                    const question = questions[idx];
+                    if (question && response) {
+                        container.addTextDisplayComponents(
+                            new TextDisplayBuilder()
+                                .setContent(`**${question.label}**\n${response}`)
+                        );
+                    }
+                });
+            }
+
+            // Add mentions at the top of container
+            const mentions = [interaction.user.toString()];
+            if (settings.supportRoles && settings.supportRoles.length > 0) {
+                mentions.push(...settings.supportRoles.map(r => `<@&${r}>`));
+            }
+            
+            container.addTextDisplayComponents(
+                new TextDisplayBuilder()
+                    .setContent(mentions.join(' '))
+            );
+
+            // Add action buttons to container
+            const buttonRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('ticket_close')
+                    .setLabel('Close Ticket')
+                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji('🔒'),
+                new ButtonBuilder()
+                    .setCustomId('ticket_claim')
+                    .setLabel('Claim')
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji('✋')
+            );
+
+            container.addActionRowComponents(buttonRow);
+
+            await channel.send({ 
+                components: [container],
+                flags: MessageFlags.IsComponentsV2
+            });
+
+            await interaction.editReply({
+                content: `✅ Ticket created! ${channel}`,
+                ephemeral: true
+            });
+
+        } catch (error) {
+            client.logger.error('Create Ticket Channel Error:', error);
+            await interaction.editReply({
+                content: '❌ Failed to create ticket channel. Please contact an administrator.',
+                ephemeral: true
+            }).catch(() => {});
+        }
+    }
+
     async handleModal(interaction) {
         const client = interaction.client;
         const customId = interaction.customId;
 
         try {
+            // Ticket Modal Submission
+            if (customId.startsWith('ticket_modal_')) {
+                const typeIndex = parseInt(customId.split('_')[2]);
+                const { prisma } = await import('../../utils/database.js');
+
+                // Get guild settings to get ticket type info
+                const guildData = await prisma.guild.findUnique({
+                    where: { guildId: interaction.guild.id }
+                });
+
+                let settings = guildData?.settings || {};
+                if (typeof settings === 'string') settings = JSON.parse(settings);
+
+                const ticketTypes = settings.ticketTypes || [{ label: 'Support', emoji: '🎫' }];
+                const ticketType = ticketTypes[typeIndex] || ticketTypes[0];
+
+                // Collect modal responses
+                const responses = [];
+                const questions = ticketType.questions || [];
+                questions.forEach((q, idx) => {
+                    try {
+                        const value = interaction.fields.getTextInputValue(`question_${idx}`);
+                        responses.push(value);
+                    } catch (e) {
+                        responses.push(null);
+                    }
+                });
+
+                await this.createTicketChannel(interaction, ticketType, typeIndex, responses);
+                return;
+            }
+
             // Custom Embed Modal
             if (customId === 'custom_embed') {
                 const title = interaction.fields.getTextInputValue('embed_title');

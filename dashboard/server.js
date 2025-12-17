@@ -93,6 +93,22 @@ app.get('/docs', (req, res) => {
     });
 });
 
+app.get('/faq', (req, res) => {
+    res.render('faq', {
+        user: req.user
+    });
+});
+
+app.get('/vote', (req, res) => {
+    // Redirect to top.gg or your voting page
+    res.redirect('https://top.gg/bot/' + config.clientId + '/vote');
+});
+
+app.get('/support', (req, res) => {
+    // Redirect to support server
+    res.redirect(config.supportServer || 'https://discord.gg/your-server');
+});
+
 // 404 handler
 app.use((req, res, next) => {
     if (!res.headersSent) {
@@ -114,10 +130,50 @@ app.use((err, req, res, next) => {
 io.on('connection', (socket) => {
     console.log('Client connected to dashboard');
     
+    // Join guild-specific room
+    socket.on('joinGuild', (guildId) => {
+        socket.join(`guild:${guildId}`);
+    });
+    
+    socket.on('leaveGuild', (guildId) => {
+        socket.leave(`guild:${guildId}`);
+    });
+    
     socket.on('disconnect', () => {
         console.log('Client disconnected from dashboard');
     });
 });
+
+// Real-time stats broadcast
+setInterval(async () => {
+    try {
+        const manager = global.shardManager;
+        if (!manager) return;
+        
+        const results = await manager.broadcastEval(client => ({
+            guilds: client.guilds.cache.size,
+            users: client.guilds.cache.reduce((acc, g) => acc + g.memberCount, 0),
+            ping: client.ws.ping
+        }));
+        
+        const stats = {
+            guilds: results.reduce((acc, r) => acc + r.guilds, 0),
+            users: results.reduce((acc, r) => acc + r.users, 0),
+            ping: Math.round(results.reduce((acc, r) => acc + r.ping, 0) / results.length)
+        };
+        
+        io.emit('statsUpdate', stats);
+    } catch (error) {
+        // Silent fail for stats broadcast
+    }
+}, 5000);
+
+// Broadcast guild-specific updates
+async function broadcastGuildUpdate(guildId, data) {
+    io.to(`guild:${guildId}`).emit('guildUpdate', data);
+}
+
+global.broadcastGuildUpdate = broadcastGuildUpdate;
 
 // Start server function
 async function startDashboard(manager = null) {

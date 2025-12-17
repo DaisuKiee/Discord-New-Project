@@ -4,96 +4,48 @@
     <%- include('../partials/layout-head') %>
     <title>Tickets - <%= guildName %></title>
     <style>
-        .color-picker-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .color-picker-wrapper input[type="color"] {
-            width: 50px;
-            height: 38px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            padding: 0;
-        }
-        .color-picker-wrapper input[type="text"] {
-            flex: 1;
-            font-family: monospace;
-        }
-        .embed-field {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-        }
-        .embed-field-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-        .ticket-type-item {
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-        }
-        .button-style-selector {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .button-style-option {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-        }
-        .button-style-option.active {
-            border-color: var(--primary);
-        }
+        .setup-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .setup-tab { padding: 0.75rem 1.25rem; border-radius: 8px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+        .setup-tab:hover { background: rgba(139, 92, 246, 0.2); }
+        .setup-tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .setup-tab i { font-size: 1rem; }
+        .setup-content { display: none; }
+        .setup-content.active { display: block; }
+        .ticket-type-card { background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+        .ticket-type-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .ticket-type-title { display: flex; align-items: center; gap: 0.75rem; }
+        .ticket-type-title .emoji-display { font-size: 1.5rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(139, 92, 246, 0.2); border-radius: 8px; }
+        .ticket-type-actions { display: flex; gap: 0.5rem; }
+        .collapsible-section { margin-top: 1rem; }
+        .collapsible-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 8px; cursor: pointer; }
+        .collapsible-header:hover { background: rgba(0,0,0,0.3); }
+        .collapsible-content { display: none; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 0 0 8px 8px; margin-top: -4px; }
+        .collapsible-content.active { display: block; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        .button-style-selector { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .button-style-option { padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; font-size: 0.85rem; }
+        .button-style-option.active { border-color: white; }
         .button-style-option.primary { background: #5865f2; color: white; }
         .button-style-option.secondary { background: #4f545c; color: white; }
         .button-style-option.success { background: #3ba55c; color: white; }
         .button-style-option.danger { background: #ed4245; color: white; }
-        .preview-embed {
-            background: #2f3136;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .preview-embed-content {
-            padding: 12px 16px;
-        }
-        .preview-embed-footer {
-            padding: 8px 16px;
-            font-size: 12px;
-            color: #72767d;
-            border-top: 1px solid rgba(255,255,255,0.05);
-        }
-        .preview-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        .preview-button {
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-size: 14px;
-            border: none;
-            cursor: default;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .separator-line {
-            height: 1px;
-            background: rgba(255,255,255,0.1);
-            margin: 8px 0;
-        }
+        .modal-question { background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.1); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.5rem; }
+        .preview-panel { background: #36393f; border-radius: 8px; padding: 1rem; }
+        .preview-embed { background: #2f3136; border-radius: 4px; border-left: 4px solid #ec4899; }
+        .preview-embed-content { padding: 12px 16px; }
+        .preview-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .preview-button { padding: 8px 16px; border-radius: 4px; font-size: 14px; border: none; display: inline-flex; align-items: center; gap: 6px; }
+        .preview-dropdown { background: #1e1f22; border: 1px solid #3f4147; border-radius: 4px; padding: 10px 12px; color: #949ba4; font-size: 14px; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+        .channel-format-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+        .channel-format-hint code { background: rgba(0,0,0,0.3); padding: 0.1rem 0.3rem; border-radius: 3px; }
+        .color-picker-wrapper { display: flex; align-items: center; gap: 0.5rem; }
+        .color-picker-wrapper input[type="color"] { width: 40px; height: 32px; border: none; border-radius: 4px; cursor: pointer; padding: 0; }
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+        .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+        .panel-style-opt { border: 2px solid transparent; transition: all 0.2s; }
+        .panel-style-opt:hover { border-color: rgba(139, 92, 246, 0.4); }
+        .panel-style-opt.active { border-color: var(--primary); background: rgba(139, 92, 246, 0.2) !important; }
     </style>
 </head>
 <body>
@@ -101,7 +53,7 @@
     
     <div class="page-wrapper">
         <%- include('../partials/dashboard-nav', { user }) %>
-        
+
         <div class="dashboard-layout">
             <%- include('../partials/sidebar', { guildId, guildName, guildIcon: typeof guildIcon !== 'undefined' ? guildIcon : null, activePage: 'tickets' }) %>
             
@@ -115,233 +67,274 @@
                         <span>Tickets</span>
                     </div>
                     <h1><i class="fas fa-ticket-alt" style="color: #ec4899;"></i> Ticket System</h1>
-                    <p>Configure your support ticket system with custom embeds and buttons</p>
+                    <p>Configure your support ticket system</p>
                 </div>
 
-                <div class="grid-2" style="gap: 2rem;">
-                    <!-- Left Column - Settings -->
-                    <div>
-                        <!-- Basic Settings -->
-                        <div class="card slide-up" style="animation-delay: 0.1s; margin-bottom: 1.5rem;">
-                            <div class="card-body">
-                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
-                                    <i class="fas fa-cog" style="color: var(--primary);"></i> Basic Settings
-                                </h3>
+                <!-- Setup Tabs -->
+                <div class="setup-tabs slide-up" style="animation-delay: 0.1s;">
+                    <div class="setup-tab active" data-tab="general"><i class="fas fa-cog"></i> General</div>
+                    <div class="setup-tab" data-tab="panel"><i class="fas fa-palette"></i> Panel Design</div>
+                    <div class="setup-tab" data-tab="types"><i class="fas fa-tags"></i> Ticket Types</div>
+                    <div class="setup-tab" data-tab="preview"><i class="fas fa-eye"></i> Preview & Send</div>
+                </div>
+
+                <!-- General Settings Tab -->
+                <div class="setup-content active" id="tab-general">
+                    <div class="card slide-up" style="animation-delay: 0.15s;">
+                        <div class="card-body">
+                            <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-cog" style="color: var(--primary);"></i> General Settings</h3>
+                            
+                            <div class="form-row" style="margin-bottom: 1rem;">
                                 <div class="form-group">
                                     <label class="form-label">Ticket Category</label>
                                     <select id="ticketCategory" class="form-select">
                                         <option value="">Select a category...</option>
                                         <% categories.forEach(cat => { %>
-                                            <option value="<%= cat.id %>" <%= settings.ticketCategory === cat.id ? 'selected' : '' %>>
-                                                📁 <%= cat.name %>
-                                            </option>
+                                            <option value="<%= cat.id %>" <%= settings.ticketCategory === cat.id ? 'selected' : '' %>>📁 <%= cat.name %></option>
                                         <% }); %>
                                     </select>
                                     <p class="form-hint">New tickets will be created in this category</p>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Support Roles</label>
-                                    <select id="supportRoles" class="form-select" multiple style="height: 120px;">
-                                        <% roles.forEach(role => { %>
-                                            <option value="<%= role.id %>" style="color: <%= role.color %>" <%= settings.supportRoles && settings.supportRoles.includes(role.id) ? 'selected' : '' %>>
-                                                @<%= role.name %>
-                                            </option>
-                                        <% }); %>
-                                    </select>
-                                    <p class="form-hint">Hold Ctrl/Cmd to select multiple</p>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
                                     <label class="form-label">Panel Channel</label>
                                     <select id="panelChannel" class="form-select">
                                         <option value="">Select a channel...</option>
                                         <% channels.forEach(ch => { %>
-                                            <option value="<%= ch.id %>" <%= settings.panelChannel === ch.id ? 'selected' : '' %>>
-                                                #<%= ch.name %>
-                                            </option>
+                                            <option value="<%= ch.id %>" <%= settings.panelChannel === ch.id ? 'selected' : '' %>>#<%= ch.name %></option>
                                         <% }); %>
                                     </select>
+                                    <p class="form-hint">Where the ticket panel will be sent</p>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Embed Customization -->
-                        <div class="card slide-up" style="animation-delay: 0.2s; margin-bottom: 1.5rem;">
-                            <div class="card-body">
-                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
-                                    <i class="fas fa-palette" style="color: #ec4899;"></i> Embed Customization
-                                </h3>
-                                <div class="form-group">
-                                    <label class="form-label">Embed Color</label>
-                                    <div class="color-picker-wrapper">
-                                        <input type="color" id="embedColor" value="<%= settings.embedColor || '#ec4899' %>">
-                                        <input type="text" id="embedColorText" class="form-input" value="<%= settings.embedColor || '#ec4899' %>" maxlength="7">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Title</label>
-                                    <input type="text" id="embedTitle" class="form-input" placeholder="🎫 Support Tickets" value="<%= settings.embedTitle || '🎫 Support Tickets' %>">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Description</label>
-                                    <textarea id="embedDescription" class="form-textarea" rows="3" placeholder="Need help? Create a ticket!"><%= settings.embedDescription || 'Need help? Click one of the buttons below to create a support ticket and our team will assist you as soon as possible!' %></textarea>
-                                </div>
-                                
-                                <!-- Embed Fields -->
-                                <div class="form-group">
-                                    <label class="form-label">Embed Fields (Optional)</label>
-                                    <div id="embedFields">
-                                        <% const fields = settings.embedFields || []; %>
-                                        <% fields.forEach((field, idx) => { %>
-                                            <div class="embed-field" data-field-id="<%= idx %>">
-                                                <div class="embed-field-header">
-                                                    <span style="font-weight: 500;">Field <%= idx + 1 %></span>
-                                                    <button type="button" class="btn btn-danger btn-sm remove-field"><i class="fas fa-trash"></i></button>
-                                                </div>
-                                                <input type="text" class="form-input field-name" placeholder="Field Name" value="<%= field.name %>" style="margin-bottom: 0.5rem;">
-                                                <textarea class="form-textarea field-value" rows="2" placeholder="Field Value"><%= field.value %></textarea>
-                                                <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.85rem;">
-                                                    <input type="checkbox" class="field-inline" <%= field.inline ? 'checked' : '' %>> Inline
-                                                </label>
-                                            </div>
-                                        <% }); %>
-                                    </div>
-                                    <button id="addFieldBtn" class="btn btn-secondary" style="width: 100%;">
-                                        <i class="fas fa-plus"></i> Add Field
-                                    </button>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Footer Text (Optional)</label>
-                                    <input type="text" id="embedFooter" class="form-input" placeholder="Click a button to get started" value="<%= settings.embedFooter || '' %>">
-                                </div>
-
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <input type="checkbox" id="showTimestamp" <%= settings.showTimestamp ? 'checked' : '' %>>
-                                        <span>Show Timestamp</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Ticket Types with Buttons -->
-                        <div class="card slide-up" style="animation-delay: 0.3s; margin-bottom: 1.5rem;">
-                            <div class="card-body">
-                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
-                                    <i class="fas fa-tags" style="color: var(--warning);"></i> Ticket Types & Buttons
-                                </h3>
-                                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-                                    Each ticket type creates a button. Customize the label, emoji, and style.
-                                </p>
-                                <div id="ticketTypes">
-                                    <% const types = settings.ticketTypes || [
-                                        { label: 'General Support', emoji: '❓', style: 'primary' },
-                                        { label: 'Technical Issue', emoji: '🔧', style: 'secondary' },
-                                        { label: 'Report', emoji: '🚨', style: 'danger' }
-                                    ]; %>
-                                    <% types.forEach((type, idx) => { %>
-                                        <div class="ticket-type-item" data-type-id="<%= idx %>">
-                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                                                <span style="font-weight: 500;">Type <%= idx + 1 %></span>
-                                                <button type="button" class="btn btn-danger btn-sm remove-type"><i class="fas fa-trash"></i></button>
-                                            </div>
-                                            <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; margin-bottom: 0.75rem;">
-                                                <input type="text" class="form-input type-label" placeholder="Button Label" value="<%= type.label %>">
-                                                <input type="text" class="form-input type-emoji" placeholder="Emoji" value="<%= type.emoji %>" style="width: 60px; text-align: center;">
-                                            </div>
-                                            <div>
-                                                <label class="form-label" style="font-size: 0.85rem;">Button Style</label>
-                                                <div class="button-style-selector">
-                                                    <div class="button-style-option primary <%= type.style === 'primary' ? 'active' : '' %>" data-style="primary">Primary</div>
-                                                    <div class="button-style-option secondary <%= type.style === 'secondary' ? 'active' : '' %>" data-style="secondary">Secondary</div>
-                                                    <div class="button-style-option success <%= type.style === 'success' ? 'active' : '' %>" data-style="success">Success</div>
-                                                    <div class="button-style-option danger <%= type.style === 'danger' ? 'active' : '' %>" data-style="danger">Danger</div>
-                                                </div>
-                                                <input type="hidden" class="type-style" value="<%= type.style || 'primary' %>">
-                                            </div>
-                                        </div>
+                            <div class="form-group">
+                                <label class="form-label">Support Roles</label>
+                                <select id="supportRoles" class="form-select" multiple style="height: 100px;">
+                                    <% roles.forEach(role => { %>
+                                        <option value="<%= role.id %>" <%= settings.supportRoles && settings.supportRoles.includes(role.id) ? 'selected' : '' %>>@<%= role.name %></option>
                                     <% }); %>
-                                </div>
-                                <button id="addTypeBtn" class="btn btn-secondary" style="width: 100%;">
-                                    <i class="fas fa-plus"></i> Add Ticket Type
-                                </button>
+                                </select>
+                                <p class="form-hint">Hold Ctrl/Cmd to select multiple roles</p>
                             </div>
-                        </div>
 
-                        <!-- Additional Settings -->
-                        <div class="card slide-up" style="animation-delay: 0.4s;">
-                            <div class="card-body">
-                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
-                                    <i class="fas fa-sliders-h" style="color: var(--success);"></i> Additional Settings
-                                </h3>
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px; margin-bottom: 1rem;">
-                                    <div>
-                                        <strong>Transcripts</strong>
-                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Save conversations when closed</p>
-                                    </div>
-                                    <label class="toggle">
-                                        <input type="checkbox" id="transcripts" <%= settings.transcripts ? 'checked' : '' %>>
-                                        <span class="toggle-slider"></span>
-                                    </label>
+                            <h4 style="margin: 1.5rem 0 1rem; font-size: 1rem;"><i class="fas fa-sliders-h" style="color: var(--success);"></i> Options</h4>
+                            
+                            <div class="form-row-3">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px;">
+                                    <label class="toggle"><input type="checkbox" id="transcripts" <%= settings.transcripts ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+                                    <div><strong style="font-size: 0.9rem;">Transcripts</strong><p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Save conversations</p></div>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px; margin-bottom: 1rem;">
-                                    <div>
-                                        <strong>Claim System</strong>
-                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Allow staff to claim tickets</p>
-                                    </div>
-                                    <label class="toggle">
-                                        <input type="checkbox" id="claimSystem" <%= settings.claimSystem ? 'checked' : '' %>>
-                                        <span class="toggle-slider"></span>
-                                    </label>
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px;">
+                                    <label class="toggle"><input type="checkbox" id="claimSystem" <%= settings.claimSystem ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+                                    <div><strong style="font-size: 0.9rem;">Claim System</strong><p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Staff can claim</p></div>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
-                                    <div>
-                                        <strong>DM on Close</strong>
-                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Send transcript to user</p>
-                                    </div>
-                                    <label class="toggle">
-                                        <input type="checkbox" id="dmOnClose" <%= settings.dmOnClose ? 'checked' : '' %>>
-                                        <span class="toggle-slider"></span>
-                                    </label>
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px;">
+                                    <label class="toggle"><input type="checkbox" id="dmOnClose" <%= settings.dmOnClose ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+                                    <div><strong style="font-size: 0.9rem;">DM on Close</strong><p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Send transcript</p></div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Right Column - Preview -->
-                    <div>
-                        <div class="card slide-up" style="animation-delay: 0.2s; position: sticky; top: 100px;">
-                            <div class="card-body">
-                                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
-                                    <i class="fas fa-eye" style="color: var(--accent);"></i> Live Preview
-                                </h3>
-                                <div id="panelPreview" style="background: #36393f; border-radius: 8px; padding: 1rem;">
-                                    <div class="preview-embed" id="previewEmbed">
-                                        <div style="height: 4px; background: #ec4899;" id="previewColorBar"></div>
-                                        <div class="preview-embed-content">
-                                            <h4 id="previewTitle" style="color: #fff; font-weight: 600; margin-bottom: 8px;">🎫 Support Tickets</h4>
-                                            <p id="previewDescription" style="color: #dcddde; font-size: 14px; white-space: pre-wrap;">Need help? Click one of the buttons below to create a support ticket and our team will assist you as soon as possible!</p>
-                                            <div id="previewFields" style="margin-top: 12px;"></div>
+                <!-- Panel Design Tab -->
+                <div class="setup-content" id="tab-panel">
+                    <div class="card slide-up">
+                        <div class="card-body">
+                            <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-palette" style="color: #ec4899;"></i> Panel Embed Design</h3>
+                            
+                            <div class="form-row" style="margin-bottom: 1rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Panel Style</label>
+                                    <div style="display: flex; gap: 0.75rem;">
+                                        <div class="panel-style-opt <%= !settings.panelStyle || settings.panelStyle === 'buttons' ? 'active' : '' %>" data-style="buttons" style="flex:1; padding: 0.75rem; text-align: center; background: rgba(139, 92, 246, 0.1); border-radius: 8px; cursor: pointer;">
+                                            <i class="fas fa-th-large" style="color: #5865f2;"></i><br><small>Buttons</small>
                                         </div>
-                                        <div class="preview-embed-footer" id="previewFooter" style="display: none;">
-                                            <span id="previewFooterText"></span>
-                                            <span id="previewTimestamp"></span>
+                                        <div class="panel-style-opt <%= settings.panelStyle === 'dropdown' ? 'active' : '' %>" data-style="dropdown" style="flex:1; padding: 0.75rem; text-align: center; background: rgba(139, 92, 246, 0.1); border-radius: 8px; cursor: pointer;">
+                                            <i class="fas fa-caret-square-down" style="color: #3ba55c;"></i><br><small>Dropdown</small>
                                         </div>
                                     </div>
-                                    <div class="preview-buttons" id="previewButtons">
-                                        <button class="preview-button" style="background: #5865f2; color: white;">❓ General Support</button>
-                                        <button class="preview-button" style="background: #4f545c; color: white;">🔧 Technical Issue</button>
-                                        <button class="preview-button" style="background: #ed4245; color: white;">🚨 Report</button>
+                                    <input type="hidden" id="panelStyle" value="<%= settings.panelStyle || 'buttons' %>">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Embed Color</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="embedColor" value="<%= settings.embedColor || '#ec4899' %>">
+                                        <input type="text" id="embedColorText" class="form-input" value="<%= settings.embedColor || '#ec4899' %>" maxlength="7" style="font-family: monospace;">
                                     </div>
                                 </div>
+                            </div>
 
-                                <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
-                                    <button id="sendPanelBtn" class="btn btn-primary" style="flex: 1;">
-                                        <i class="fas fa-paper-plane"></i> Send Panel
-                                    </button>
-                                    <button id="saveBtn" class="btn btn-success" style="flex: 1;">
-                                        <i class="fas fa-save"></i> Save Settings
-                                    </button>
+                            <div class="form-group">
+                                <label class="form-label">Title</label>
+                                <input type="text" id="embedTitle" class="form-input" placeholder="🎫 Support Tickets" value="<%= settings.embedTitle || '🎫 Support Tickets' %>">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <textarea id="embedDescription" class="form-textarea" rows="3" placeholder="Need help? Create a ticket!"><%= settings.embedDescription || 'Need help? Click one of the buttons below to create a support ticket and our team will assist you as soon as possible!' %></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Thumbnail URL (Optional)</label>
+                                    <input type="text" id="embedThumbnail" class="form-input" placeholder="https://..." value="<%= settings.embedThumbnail || '' %>">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Image URL (Optional)</label>
+                                    <input type="text" id="embedImage" class="form-input" placeholder="https://..." value="<%= settings.embedImage || '' %>">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Footer (Optional)</label>
+                                <div class="form-row">
+                                    <input type="text" id="embedFooter" class="form-input" placeholder="Footer text" value="<%= settings.embedFooter || '' %>">
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" id="showTimestamp" <%= settings.showTimestamp ? 'checked' : '' %>> Show Timestamp</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ticket Types Tab -->
+                <div class="setup-content" id="tab-types">
+                    <div class="card slide-up">
+                        <div class="card-body">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h3 style="margin: 0;"><i class="fas fa-tags" style="color: var(--warning);"></i> Ticket Types</h3>
+                                <button id="addTypeBtn" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Type</button>
+                            </div>
+                            
+                            <div id="ticketTypes">
+                                <% const types = settings.ticketTypes || [{ label: 'General Support', emoji: '❓', style: 'primary', channelFormat: 'ticket-{number}-{username}' }]; %>
+                                <% if (types.length === 0) { %>
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>No ticket types yet. Add one to get started!</p>
+                                    </div>
+                                <% } %>
+                                <% types.forEach((type, idx) => { %>
+                                    <div class="ticket-type-card" data-type-id="<%= idx %>">
+                                        <div class="ticket-type-header">
+                                            <div class="ticket-type-title">
+                                                <div class="emoji-display type-emoji-display"><%= type.emoji || '🎫' %></div>
+                                                <div>
+                                                    <input type="text" class="form-input type-label" value="<%= type.label %>" style="font-weight: 600; font-size: 1.1rem; background: transparent; border: none; padding: 0; width: auto;">
+                                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Type #<%= idx + 1 %></p>
+                                                </div>
+                                            </div>
+                                            <div class="ticket-type-actions">
+                                                <button type="button" class="btn btn-danger btn-sm remove-type"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Basic Settings -->
+                                        <div class="form-row" style="margin-bottom: 1rem;">
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label class="form-label">Emoji</label>
+                                                <input type="text" class="form-input type-emoji" value="<%= type.emoji %>" style="width: 80px; text-align: center; font-size: 1.25rem;">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label class="form-label">Channel Name Format</label>
+                                                <input type="text" class="form-input type-channel-format" value="<%= type.channelFormat || 'ticket-{number}-{username}' %>" placeholder="ticket-{number}-{username}">
+                                                <p class="channel-format-hint">Variables: <code>{number}</code> <code>{username}</code> <code>{type}</code></p>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group" style="margin-bottom: 1rem;">
+                                            <label class="form-label">Description (for dropdown)</label>
+                                            <input type="text" class="form-input type-description" value="<%= type.description || '' %>" placeholder="Short description for dropdown menu">
+                                        </div>
+
+                                        <!-- Button Style -->
+                                        <div class="form-group" style="margin-bottom: 1rem;">
+                                            <label class="form-label">Button Style</label>
+                                            <div class="button-style-selector">
+                                                <div class="button-style-option primary <%= type.style === 'primary' || !type.style ? 'active' : '' %>" data-style="primary">Primary</div>
+                                                <div class="button-style-option secondary <%= type.style === 'secondary' ? 'active' : '' %>" data-style="secondary">Secondary</div>
+                                                <div class="button-style-option success <%= type.style === 'success' ? 'active' : '' %>" data-style="success">Success</div>
+                                                <div class="button-style-option danger <%= type.style === 'danger' ? 'active' : '' %>" data-style="danger">Danger</div>
+                                            </div>
+                                            <input type="hidden" class="type-style" value="<%= type.style || 'primary' %>">
+                                        </div>
+
+                                        <!-- Modal Questions Collapsible -->
+                                        <div class="collapsible-section">
+                                            <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('active'); this.querySelector('.chevron').style.transform = this.nextElementSibling.classList.contains('active') ? 'rotate(180deg)' : '';">
+                                                <div><i class="fas fa-question-circle" style="color: #ec4899; margin-right: 0.5rem;"></i><strong>Modal Questions</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">(<span class="question-count"><%= type.questions ? type.questions.length : 0 %></span>/5)</span></div>
+                                                <i class="fas fa-chevron-down chevron" style="transition: transform 0.2s;"></i>
+                                            </div>
+                                            <div class="collapsible-content <%= type.questions && type.questions.length > 0 ? 'active' : '' %>">
+                                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Ask users questions before creating the ticket</p>
+                                                <div class="questions-container">
+                                                    <% const questions = type.questions || []; %>
+                                                    <% questions.forEach((q, qIdx) => { %>
+                                                        <div class="modal-question" data-question-id="<%= qIdx %>">
+                                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                                                <span style="font-size: 0.85rem; font-weight: 500;">Q<%= qIdx + 1 %></span>
+                                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                                    <select class="form-select question-type-select" style="padding: 0.25rem; font-size: 0.8rem; width: auto;">
+                                                                        <option value="short" <%= q.type === 'short' ? 'selected' : '' %>>Short</option>
+                                                                        <option value="paragraph" <%= q.type === 'paragraph' ? 'selected' : '' %>>Paragraph</option>
+                                                                    </select>
+                                                                    <label style="font-size: 0.8rem;"><input type="checkbox" class="question-required" <%= q.required ? 'checked' : '' %>> Required</label>
+                                                                    <button type="button" class="btn btn-danger btn-sm remove-question" style="padding: 0.2rem 0.4rem;"><i class="fas fa-times"></i></button>
+                                                                </div>
+                                                            </div>
+                                                            <input type="text" class="form-input question-label" placeholder="Question" value="<%= q.label %>" style="margin-bottom: 0.25rem; font-size: 0.9rem;">
+                                                            <input type="text" class="form-input question-placeholder" placeholder="Placeholder (optional)" value="<%= q.placeholder || '' %>" style="font-size: 0.85rem;">
+                                                        </div>
+                                                    <% }); %>
+                                                </div>
+                                                <button type="button" class="btn btn-secondary btn-sm add-question-btn" style="width: 100%; margin-top: 0.5rem;"><i class="fas fa-plus"></i> Add Question</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview & Send Tab -->
+                <div class="setup-content" id="tab-preview">
+                    <div class="grid-2" style="gap: 1.5rem;">
+                        <div class="card slide-up">
+                            <div class="card-body">
+                                <h3 style="margin-bottom: 1rem;"><i class="fas fa-eye" style="color: var(--accent);"></i> Live Preview</h3>
+                                <div class="preview-panel" id="panelPreview">
+                                    <div class="preview-embed" id="previewEmbed">
+                                        <div class="preview-embed-content">
+                                            <h4 id="previewTitle" style="color: #fff; font-weight: 600; margin-bottom: 8px;">🎫 Support Tickets</h4>
+                                            <p id="previewDescription" style="color: #dcddde; font-size: 14px;">Need help? Click a button below!</p>
+                                        </div>
+                                    </div>
+                                    <div class="preview-buttons" id="previewButtons"></div>
+                                    <div class="preview-dropdown" id="previewDropdown" style="display: none;">
+                                        <span>Select a ticket type...</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card slide-up">
+                            <div class="card-body">
+                                <h3 style="margin-bottom: 1rem;"><i class="fas fa-paper-plane" style="color: var(--success);"></i> Actions</h3>
+                                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Send the ticket panel to your selected channel or save your settings.</p>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <button id="sendPanelBtn" class="btn btn-primary" style="width: 100%;"><i class="fas fa-paper-plane"></i> Send Panel to Channel</button>
+                                    <button id="saveBtn" class="btn btn-success" style="width: 100%;"><i class="fas fa-save"></i> Save Settings</button>
+                                </div>
+
+                                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px;">
+                                    <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="fas fa-info-circle"></i> Tips</h4>
+                                    <ul style="font-size: 0.85rem; color: var(--text-muted); margin: 0; padding-left: 1.25rem;">
+                                        <li>Sending a new panel will delete the old one</li>
+                                        <li>Save settings to keep changes without sending</li>
+                                        <li>Each ticket type can have its own channel format</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -354,142 +347,117 @@
     <script src="/js/dashboard.js"></script>
     <script>
         const guildId = '<%= guildId %>';
-        
-        // Update preview function
-        function updatePreview() {
-            // Color
-            const color = document.getElementById('embedColor').value;
-            document.getElementById('previewColorBar').style.background = color;
-            
-            // Title & Description
-            document.getElementById('previewTitle').textContent = document.getElementById('embedTitle').value || '🎫 Support Tickets';
-            document.getElementById('previewDescription').textContent = document.getElementById('embedDescription').value || 'Click a button to create a ticket';
-            
-            // Fields
-            const fieldsContainer = document.getElementById('previewFields');
-            fieldsContainer.innerHTML = '';
-            document.querySelectorAll('.embed-field').forEach(field => {
-                const name = field.querySelector('.field-name').value;
-                const value = field.querySelector('.field-value').value;
-                const inline = field.querySelector('.field-inline').checked;
-                if (name || value) {
-                    const fieldEl = document.createElement('div');
-                    fieldEl.style.cssText = inline ? 'display: inline-block; width: 45%; margin-right: 5%; vertical-align: top;' : '';
-                    fieldEl.innerHTML = `
-                        <div style="color: #fff; font-weight: 600; font-size: 13px; margin-bottom: 2px;">${name}</div>
-                        <div style="color: #dcddde; font-size: 14px;">${value}</div>
-                    `;
-                    fieldsContainer.appendChild(fieldEl);
-                }
+
+        // Tab switching
+        document.querySelectorAll('.setup-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.setup-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.setup-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+                if (tab.dataset.tab === 'preview') updatePreview();
             });
-            
-            // Footer
-            const footerText = document.getElementById('embedFooter').value;
-            const showTimestamp = document.getElementById('showTimestamp').checked;
-            const footerEl = document.getElementById('previewFooter');
-            if (footerText || showTimestamp) {
-                footerEl.style.display = 'flex';
-                footerEl.style.justifyContent = 'space-between';
-                document.getElementById('previewFooterText').textContent = footerText;
-                document.getElementById('previewTimestamp').textContent = showTimestamp ? new Date().toLocaleString() : '';
-            } else {
-                footerEl.style.display = 'none';
-            }
-            
-            // Buttons
-            const buttonsContainer = document.getElementById('previewButtons');
-            buttonsContainer.innerHTML = '';
-            document.querySelectorAll('.ticket-type-item').forEach(type => {
-                const label = type.querySelector('.type-label').value || 'Ticket';
-                const emoji = type.querySelector('.type-emoji').value;
-                const style = type.querySelector('.type-style').value;
-                
-                const colors = {
-                    primary: '#5865f2',
-                    secondary: '#4f545c',
-                    success: '#3ba55c',
-                    danger: '#ed4245'
-                };
-                
-                const btn = document.createElement('button');
-                btn.className = 'preview-button';
-                btn.style.background = colors[style] || colors.primary;
-                btn.style.color = 'white';
-                btn.innerHTML = emoji ? `${emoji} ${label}` : label;
-                buttonsContainer.appendChild(btn);
+        });
+
+        // Panel style selector
+        document.querySelectorAll('.panel-style-opt').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('.panel-style-opt').forEach(o => { o.classList.remove('active'); o.style.borderColor = 'transparent'; });
+                opt.classList.add('active');
+                opt.style.borderColor = 'var(--primary)';
+                document.getElementById('panelStyle').value = opt.dataset.style;
             });
-        }
+        });
 
         // Color picker sync
-        document.getElementById('embedColor').addEventListener('input', (e) => {
-            document.getElementById('embedColorText').value = e.target.value;
-            updatePreview();
+        document.getElementById('embedColor').addEventListener('input', e => { document.getElementById('embedColorText').value = e.target.value; });
+        document.getElementById('embedColorText').addEventListener('input', e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) document.getElementById('embedColor').value = e.target.value; });
+
+        // Emoji display update
+        document.querySelectorAll('.type-emoji').forEach(input => {
+            input.addEventListener('input', () => {
+                const card = input.closest('.ticket-type-card');
+                card.querySelector('.type-emoji-display').textContent = input.value || '🎫';
+            });
         });
-        document.getElementById('embedColorText').addEventListener('input', (e) => {
-            if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-                document.getElementById('embedColor').value = e.target.value;
-                updatePreview();
+
+        // Update preview
+        function updatePreview() {
+            const title = document.getElementById('embedTitle').value || '🎫 Support Tickets';
+            const description = document.getElementById('embedDescription').value || 'Click a button to create a ticket';
+            const color = document.getElementById('embedColor').value;
+            const panelStyle = document.getElementById('panelStyle').value;
+
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewDescription').textContent = description;
+            document.querySelector('.preview-embed').style.borderLeftColor = color;
+
+            const buttonsContainer = document.getElementById('previewButtons');
+            const dropdownContainer = document.getElementById('previewDropdown');
+
+            if (panelStyle === 'dropdown') {
+                buttonsContainer.style.display = 'none';
+                dropdownContainer.style.display = 'flex';
+            } else {
+                buttonsContainer.style.display = 'flex';
+                dropdownContainer.style.display = 'none';
+                buttonsContainer.innerHTML = '';
+                
+                const colors = { primary: '#5865f2', secondary: '#4f545c', success: '#3ba55c', danger: '#ed4245' };
+                document.querySelectorAll('.ticket-type-card').forEach(card => {
+                    const label = card.querySelector('.type-label').value || 'Ticket';
+                    const emoji = card.querySelector('.type-emoji').value;
+                    const style = card.querySelector('.type-style').value;
+                    const btn = document.createElement('button');
+                    btn.className = 'preview-button';
+                    btn.style.background = colors[style] || colors.primary;
+                    btn.style.color = 'white';
+                    btn.innerHTML = emoji ? `${emoji} ${label}` : label;
+                    buttonsContainer.appendChild(btn);
+                });
             }
-        });
-
-        // Live preview listeners
-        ['embedTitle', 'embedDescription', 'embedFooter'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updatePreview);
-        });
-        document.getElementById('showTimestamp').addEventListener('change', updatePreview);
-
-        // Add embed field
-        let fieldCount = document.querySelectorAll('.embed-field').length;
-        document.getElementById('addFieldBtn').addEventListener('click', () => {
-            const container = document.getElementById('embedFields');
-            const div = document.createElement('div');
-            div.className = 'embed-field';
-            div.dataset.fieldId = fieldCount++;
-            div.innerHTML = `
-                <div class="embed-field-header">
-                    <span style="font-weight: 500;">Field ${fieldCount}</span>
-                    <button type="button" class="btn btn-danger btn-sm remove-field"><i class="fas fa-trash"></i></button>
-                </div>
-                <input type="text" class="form-input field-name" placeholder="Field Name" style="margin-bottom: 0.5rem;">
-                <textarea class="form-textarea field-value" rows="2" placeholder="Field Value"></textarea>
-                <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.85rem;">
-                    <input type="checkbox" class="field-inline"> Inline
-                </label>
-            `;
-            container.appendChild(div);
-            attachFieldListeners(div);
-        });
-
-        function attachFieldListeners(field) {
-            field.querySelector('.remove-field').addEventListener('click', () => {
-                field.remove();
-                updatePreview();
-            });
-            field.querySelectorAll('input, textarea').forEach(el => {
-                el.addEventListener('input', updatePreview);
-            });
-            field.querySelector('.field-inline').addEventListener('change', updatePreview);
         }
-        document.querySelectorAll('.embed-field').forEach(attachFieldListeners);
 
         // Add ticket type
-        let typeCount = document.querySelectorAll('.ticket-type-item').length;
+        let typeCount = document.querySelectorAll('.ticket-type-card').length;
         document.getElementById('addTypeBtn').addEventListener('click', () => {
             const container = document.getElementById('ticketTypes');
+            const emptyState = container.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+            
             const div = document.createElement('div');
-            div.className = 'ticket-type-item';
+            div.className = 'ticket-type-card';
             div.dataset.typeId = typeCount++;
             div.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                    <span style="font-weight: 500;">Type ${typeCount}</span>
-                    <button type="button" class="btn btn-danger btn-sm remove-type"><i class="fas fa-trash"></i></button>
+                <div class="ticket-type-header">
+                    <div class="ticket-type-title">
+                        <div class="emoji-display type-emoji-display">📩</div>
+                        <div>
+                            <input type="text" class="form-input type-label" value="New Ticket" style="font-weight: 600; font-size: 1.1rem; background: transparent; border: none; padding: 0; width: auto;">
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Type #${typeCount}</p>
+                        </div>
+                    </div>
+                    <div class="ticket-type-actions">
+                        <button type="button" class="btn btn-danger btn-sm remove-type"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; margin-bottom: 0.75rem;">
-                    <input type="text" class="form-input type-label" placeholder="Button Label" value="New Ticket">
-                    <input type="text" class="form-input type-emoji" placeholder="Emoji" value="📩" style="width: 60px; text-align: center;">
+                <div class="form-row" style="margin-bottom: 1rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Emoji</label>
+                        <input type="text" class="form-input type-emoji" value="📩" style="width: 80px; text-align: center; font-size: 1.25rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Channel Name Format</label>
+                        <input type="text" class="form-input type-channel-format" value="ticket-{number}-{username}" placeholder="ticket-{number}-{username}">
+                        <p class="channel-format-hint">Variables: <code>{number}</code> <code>{username}</code> <code>{type}</code></p>
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label" style="font-size: 0.85rem;">Button Style</label>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">Description (for dropdown)</label>
+                    <input type="text" class="form-input type-description" value="" placeholder="Short description for dropdown menu">
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">Button Style</label>
                     <div class="button-style-selector">
                         <div class="button-style-option primary active" data-style="primary">Primary</div>
                         <div class="button-style-option secondary" data-style="secondary">Secondary</div>
@@ -498,90 +466,110 @@
                     </div>
                     <input type="hidden" class="type-style" value="primary">
                 </div>
+                <div class="collapsible-section">
+                    <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('active'); this.querySelector('.chevron').style.transform = this.nextElementSibling.classList.contains('active') ? 'rotate(180deg)' : '';">
+                        <div><i class="fas fa-question-circle" style="color: #ec4899; margin-right: 0.5rem;"></i><strong>Modal Questions</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">(<span class="question-count">0</span>/5)</span></div>
+                        <i class="fas fa-chevron-down chevron" style="transition: transform 0.2s;"></i>
+                    </div>
+                    <div class="collapsible-content">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Ask users questions before creating the ticket</p>
+                        <div class="questions-container"></div>
+                        <button type="button" class="btn btn-secondary btn-sm add-question-btn" style="width: 100%; margin-top: 0.5rem;"><i class="fas fa-plus"></i> Add Question</button>
+                    </div>
+                </div>
             `;
             container.appendChild(div);
             attachTypeListeners(div);
-            updatePreview();
         });
 
-        function attachTypeListeners(type) {
-            type.querySelector('.remove-type').addEventListener('click', () => {
-                type.remove();
-                updatePreview();
+        function attachTypeListeners(card) {
+            card.querySelector('.remove-type').addEventListener('click', () => card.remove());
+            card.querySelector('.type-emoji').addEventListener('input', () => {
+                card.querySelector('.type-emoji-display').textContent = card.querySelector('.type-emoji').value || '🎫';
             });
-            type.querySelectorAll('.type-label, .type-emoji').forEach(el => {
-                el.addEventListener('input', updatePreview);
-            });
-            type.querySelectorAll('.button-style-option').forEach(opt => {
+            card.querySelectorAll('.button-style-option').forEach(opt => {
                 opt.addEventListener('click', () => {
-                    type.querySelectorAll('.button-style-option').forEach(o => o.classList.remove('active'));
+                    card.querySelectorAll('.button-style-option').forEach(o => o.classList.remove('active'));
                     opt.classList.add('active');
-                    type.querySelector('.type-style').value = opt.dataset.style;
-                    updatePreview();
+                    card.querySelector('.type-style').value = opt.dataset.style;
                 });
+            });
+            const addQuestionBtn = card.querySelector('.add-question-btn');
+            if (addQuestionBtn) {
+                addQuestionBtn.addEventListener('click', () => {
+                    const container = card.querySelector('.questions-container');
+                    const count = container.querySelectorAll('.modal-question').length;
+                    if (count >= 5) { Toast.error('Maximum 5 questions'); return; }
+                    const q = document.createElement('div');
+                    q.className = 'modal-question';
+                    q.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.85rem; font-weight: 500;">Q${count + 1}</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <select class="form-select question-type-select" style="padding: 0.25rem; font-size: 0.8rem; width: auto;">
+                                    <option value="short">Short</option>
+                                    <option value="paragraph">Paragraph</option>
+                                </select>
+                                <label style="font-size: 0.8rem;"><input type="checkbox" class="question-required"> Required</label>
+                                <button type="button" class="btn btn-danger btn-sm remove-question" style="padding: 0.2rem 0.4rem;"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <input type="text" class="form-input question-label" placeholder="Question" style="margin-bottom: 0.25rem; font-size: 0.9rem;">
+                        <input type="text" class="form-input question-placeholder" placeholder="Placeholder (optional)" style="font-size: 0.85rem;">
+                    `;
+                    container.appendChild(q);
+                    q.querySelector('.remove-question').addEventListener('click', () => { q.remove(); updateQuestionCount(card); });
+                    updateQuestionCount(card);
+                });
+            }
+            card.querySelectorAll('.modal-question .remove-question').forEach(btn => {
+                btn.addEventListener('click', () => { btn.closest('.modal-question').remove(); updateQuestionCount(card); });
             });
         }
-        document.querySelectorAll('.ticket-type-item').forEach(attachTypeListeners);
 
-        // Send panel
-        document.getElementById('sendPanelBtn').addEventListener('click', async () => {
-            const channelId = document.getElementById('panelChannel').value;
-            if (!channelId) {
-                Toast.error('Please select a panel channel');
-                return;
-            }
+        function updateQuestionCount(card) {
+            const count = card.querySelectorAll('.modal-question').length;
+            card.querySelector('.question-count').textContent = count;
+        }
 
-            const data = collectSettings();
-            data.channelId = channelId;
+        document.querySelectorAll('.ticket-type-card').forEach(attachTypeListeners);
 
-            try {
-                const response = await fetch(`/api/guild/${guildId}/ticket-panel`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if (response.ok) {
-                    Toast.success('Ticket panel sent!');
-                } else {
-                    throw new Error('Failed');
-                }
-            } catch (error) {
-                Toast.error('Failed to send panel');
-            }
-        });
-
-        // Collect all settings
+        // Collect settings
         function collectSettings() {
             const ticketTypes = [];
-            document.querySelectorAll('.ticket-type-item').forEach(type => {
-                ticketTypes.push({
-                    label: type.querySelector('.type-label').value,
-                    emoji: type.querySelector('.type-emoji').value,
-                    style: type.querySelector('.type-style').value
+            document.querySelectorAll('.ticket-type-card').forEach(card => {
+                const questions = [];
+                card.querySelectorAll('.modal-question').forEach(q => {
+                    const label = q.querySelector('.question-label').value;
+                    if (label) {
+                        questions.push({
+                            label,
+                            placeholder: q.querySelector('.question-placeholder').value || '',
+                            type: q.querySelector('.question-type-select').value,
+                            required: q.querySelector('.question-required').checked
+                        });
+                    }
                 });
-            });
-
-            const embedFields = [];
-            document.querySelectorAll('.embed-field').forEach(field => {
-                const name = field.querySelector('.field-name').value;
-                const value = field.querySelector('.field-value').value;
-                if (name || value) {
-                    embedFields.push({
-                        name,
-                        value,
-                        inline: field.querySelector('.field-inline').checked
-                    });
-                }
+                ticketTypes.push({
+                    label: card.querySelector('.type-label').value,
+                    emoji: card.querySelector('.type-emoji').value,
+                    style: card.querySelector('.type-style').value,
+                    description: card.querySelector('.type-description').value || '',
+                    channelFormat: card.querySelector('.type-channel-format').value || 'ticket-{number}-{username}',
+                    questions: questions.length > 0 ? questions : undefined
+                });
             });
 
             return {
                 ticketCategory: document.getElementById('ticketCategory').value,
                 panelChannel: document.getElementById('panelChannel').value,
                 supportRoles: Array.from(document.getElementById('supportRoles').selectedOptions).map(o => o.value),
+                panelStyle: document.getElementById('panelStyle').value,
                 embedColor: document.getElementById('embedColor').value,
                 embedTitle: document.getElementById('embedTitle').value,
                 embedDescription: document.getElementById('embedDescription').value,
-                embedFields,
+                embedThumbnail: document.getElementById('embedThumbnail').value,
+                embedImage: document.getElementById('embedImage').value,
                 embedFooter: document.getElementById('embedFooter').value,
                 showTimestamp: document.getElementById('showTimestamp').checked,
                 ticketTypes,
@@ -591,22 +579,60 @@
             };
         }
 
-        // Save settings
-        document.getElementById('saveBtn').addEventListener('click', async () => {
-            const data = collectSettings();
+        // Send panel
+        document.getElementById('sendPanelBtn').addEventListener('click', async () => {
+            const channelId = document.getElementById('panelChannel').value;
+            if (!channelId) { Toast.error('Please select a panel channel'); return; }
+
+            const btn = document.getElementById('sendPanelBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
             try {
-                const response = await fetch(`/api/guild/${guildId}/tickets`, {
+                const data = collectSettings();
+                data.channelId = channelId;
+                const response = await fetch(`/api/guild/${guildId}/ticket-panel`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (response.ok) {
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    Toast.success('Ticket panel sent!');
+                } else {
+                    Toast.error(result.error || 'Failed to send panel');
+                }
+            } catch (error) {
+                Toast.error('Failed to send panel');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Panel to Channel';
+            }
+        });
+
+        // Save settings
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                const response = await fetch(`/api/guild/${guildId}/tickets`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(collectSettings())
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
                     Toast.success('Settings saved!');
                 } else {
-                    throw new Error('Failed');
+                    Toast.error(result.error || 'Failed to save');
                 }
             } catch (error) {
                 Toast.error('Failed to save settings');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save Settings';
             }
         });
 

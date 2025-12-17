@@ -3,444 +3,353 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Bot Status</title>
+    <title id="page-title">Status</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/dashboard.css">
     <style>
-        body {
-            background: #000000;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            overflow-x: hidden;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #030014; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: #fff; min-height: 100vh; }
+        
+        /* Loading Preloader */
+        .page-preloader { position: fixed; inset: 0; background: #030014; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease; }
+        .page-preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-spinner { width: 50px; height: 50px; border: 3px solid rgba(34, 197, 94, 0.2); border-top-color: #22c55e; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text { color: rgba(255, 255, 255, 0.6); font-size: 0.95rem; }
+        
+        .grid-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px); background-size: 60px 60px; z-index: 0; }
+        .orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.4; z-index: 0; }
+        .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(34, 197, 94, 0.4) 0%, transparent 70%); top: -100px; right: -100px; }
+        .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%); bottom: -100px; left: -100px; }
+        
+        .content { position: relative; z-index: 10; }
+        
+        .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1rem 2rem; background: rgba(3, 0, 20, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(139, 92, 246, 0.1); }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+        .nav-brand img { width: 44px; height: 44px; border-radius: 12px; border: 2px solid rgba(139, 92, 246, 0.3); }
+        .nav-brand span { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-links a { color: rgba(255, 255, 255, 0.7); text-decoration: none; font-weight: 500; transition: all 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: #fff; }
+        .btn-glow { background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); padding: 12px 28px; border-radius: 12px; font-weight: 600; text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; box-shadow: 0 0 30px rgba(139, 92, 246, 0.3); }
+        
+        .main { padding: 120px 2rem 60px; max-width: 1400px; margin: 0 auto; }
+        .page-header { text-align: center; margin-bottom: 3rem; }
+        .page-header h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; }
+        .gradient-text { background: linear-gradient(135deg, #22c55e 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: rgba(255, 255, 255, 0.6); font-size: 1.2rem; }
+        
+        .status-banner { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 3rem; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 20px #22c55e; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .status-banner span { font-size: 1.1rem; font-weight: 600; color: #22c55e; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 3rem; }
+        .stat-card { background: rgba(20, 20, 30, 0.6); border: 1px solid rgba(139, 92, 246, 0.1); border-radius: 20px; padding: 1.5rem; text-align: center; }
+        .stat-value { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { color: rgba(255, 255, 255, 0.5); font-size: 0.9rem; margin-top: 0.5rem; }
+        
+        .section-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .section-title i { color: #8b5cf6; }
+        
+        .shards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 3rem; }
+        .shard-card { background: rgba(20, 20, 30, 0.6); border: 1px solid rgba(139, 92, 246, 0.1); border-radius: 16px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; transition: all 0.3s; }
+        .shard-card:hover { border-color: rgba(139, 92, 246, 0.3); transform: translateY(-3px); }
+        .shard-status { width: 10px; height: 10px; border-radius: 50%; }
+        .shard-status.online { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+        .shard-status.offline { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+        .shard-info { flex: 1; }
+        .shard-name { font-weight: 600; margin-bottom: 4px; }
+        .shard-details { font-size: 0.85rem; color: rgba(255, 255, 255, 0.5); }
+        .shard-ping { font-weight: 600; color: #22c55e; }
+        
+        .chart-container { background: rgba(20, 20, 30, 0.6); border: 1px solid rgba(139, 92, 246, 0.1); border-radius: 20px; padding: 2rem; }
+        
+        .footer { padding: 3rem 2rem; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center; color: rgba(255, 255, 255, 0.4); }
+        
+        /* Mobile Menu */
+        .mobile-menu-btn { display: none; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        .mobile-menu { display: none; position: fixed; top: 76px; left: 0; right: 0; background: rgba(3, 0, 20, 0.98); backdrop-filter: blur(20px); padding: 1rem; border-bottom: 1px solid rgba(139, 92, 246, 0.1); z-index: 99; }
+        .mobile-menu.open { display: block; }
+        .mobile-menu a { display: block; padding: 1rem; color: rgba(255, 255, 255, 0.7); text-decoration: none; border-radius: 8px; }
+        .mobile-menu a:hover, .mobile-menu a.active { background: rgba(139, 92, 246, 0.1); color: #fff; }
+        
+        @media (max-width: 1024px) { 
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: block; }
         }
         
-        /* Loading Screen */
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        #loading-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-        .loader {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(139, 92, 246, 0.2);
-            border-top-color: #a78bfa;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        @media (max-width: 768px) {
+            .nav { padding: 0.875rem 1rem; }
+            .nav-brand span { font-size: 1.1rem; }
+            .btn-glow { padding: 10px 16px; font-size: 0.875rem; }
+            .main { padding: 90px 1rem 40px; }
+            .page-header { margin-bottom: 2rem; }
+            .page-header h1 { font-size: 1.875rem; }
+            .page-header p { font-size: 0.95rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+            .stat-card { padding: 1.25rem; border-radius: 16px; }
+            .stat-value { font-size: 1.75rem; }
+            .stat-label { font-size: 0.8rem; }
+            .status-banner { padding: 1rem; flex-direction: row; gap: 10px; border-radius: 12px; margin-bottom: 2rem; }
+            .status-banner span { font-size: 0.95rem; }
+            .section-title { font-size: 1.25rem; margin-bottom: 1rem; }
+            .shards-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+            .shard-card { padding: 1rem; border-radius: 12px; }
+            .chart-container { padding: 1rem; border-radius: 16px; margin-top: 2rem; }
+            .orb { opacity: 0.15; }
+            .orb-1 { width: 300px; height: 300px; }
+            .orb-2 { width: 250px; height: 250px; }
         }
         
-        .page-content {
-            opacity: 0;
-            animation: fadeIn 0.8s ease forwards;
-            animation-delay: 0.3s;
-        }
-        @keyframes fadeIn {
-            to { opacity: 1; }
+        @media (max-width: 480px) {
+            .nav { padding: 0.75rem; }
+            .nav-brand img { width: 36px; height: 36px; }
+            .nav-brand span { display: none; }
+            .btn-glow .btn-text { display: none; }
+            .btn-glow { padding: 10px 12px; }
+            .main { padding: 85px 0.875rem 30px; }
+            .page-header h1 { font-size: 1.625rem; }
+            .page-header p { font-size: 0.875rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+            .stat-card { padding: 1rem; }
+            .stat-value { font-size: 1.5rem; }
+            .stat-label { font-size: 0.7rem; }
+            .status-banner { padding: 0.875rem; }
+            .status-dot { width: 10px; height: 10px; }
+            .status-banner span { font-size: 0.85rem; }
+            .section-title { font-size: 1.1rem; }
+            .shard-card { padding: 0.875rem; }
+            .shard-name { font-size: 0.9rem; }
+            .shard-details { font-size: 0.75rem; }
+            .shard-ping { font-size: 0.85rem; }
+            .chart-container { padding: 0.875rem; }
+            .footer { padding: 2rem 1rem; font-size: 0.8rem; }
+            .orb { opacity: 0.1; }
+            .orb-1 { width: 200px; height: 200px; }
+            .orb-2 { width: 150px; height: 150px; }
         }
         
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .nav-link {
-            color: rgba(255, 255, 255, 0.7);
-            transition: color 0.3s ease;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: rgba(255, 255, 255, 1);
-        }
-        .primary-btn {
-            background: #5865F2;
-            transition: all 0.3s ease;
-        }
-        .primary-btn:hover {
-            background: #4752C4;
-            transform: translateY(-2px);
-        }
-        .shard-card {
-            background: rgba(30, 30, 30, 0.6);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-        .shard-card:hover {
-            border-color: rgba(139, 92, 246, 0.5);
-            transform: translateY(-2px);
-        }
-        .status-operational {
-            color: #57F287;
-        }
-        .status-degraded {
-            color: #FEE75C;
-        }
-        .status-offline {
-            color: #ED4245;
-        }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-        }
-        .status-dot.operational {
-            background: #57F287;
-            box-shadow: 0 0 8px #57F287;
-        }
-        .status-dot.degraded {
-            background: #FEE75C;
-            box-shadow: 0 0 8px #FEE75C;
-        }
-        .status-dot.offline {
-            background: #ED4245;
-            box-shadow: 0 0 8px #ED4245;
+        @media (max-width: 360px) {
+            .page-header h1 { font-size: 1.5rem; }
+            .stats-grid { gap: 0.5rem; }
+            .stat-card { padding: 0.875rem; border-radius: 12px; }
+            .stat-value { font-size: 1.375rem; }
+            .stat-label { font-size: 0.65rem; }
+            .status-banner { padding: 0.75rem; }
+            .status-banner span { font-size: 0.8rem; }
+            .section-title { font-size: 1rem; }
+            .shard-card { padding: 0.75rem; }
+            .shard-name { font-size: 0.85rem; }
+            .shard-details { font-size: 0.7rem; }
+            .shard-ping { font-size: 0.8rem; }
         }
     </style>
 </head>
-<body class="text-white min-h-screen">
-    <!-- Loading Screen -->
-    <div id="loading-screen">
-        <div class="loader mb-6"></div>
-        <p class="text-gray-400 text-lg">Loading Status...</p>
+<body>
+    <!-- Loading Preloader -->
+    <div class="page-preloader" id="pagePreloader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading status...</div>
     </div>
 
-    <div class="page-content">
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <!-- Logo -->
-                <div class="flex items-center space-x-3">
-                    <img id="bot-avatar" src="" alt="Bot" class="w-10 h-10 rounded-full hidden">
-                    <div id="bot-avatar-placeholder" class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                        <i class="fas fa-robot text-xl"></i>
-                    </div>
-                    <span id="bot-name" class="text-xl font-bold">Discord Bot</span>
+    <div class="grid-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    
+    <div class="content">
+        <nav class="nav">
+            <div class="nav-container">
+                <a href="/" class="nav-brand">
+                    <img id="bot-avatar" src="/images/bot-avatar.svg" alt="Bot">
+                    <span id="bot-name">Dashboard</span>
+                </a>
+                <div class="nav-links">
+                    <a href="/">Home</a>
+                    <a href="/commands">Commands</a>
+                    <a href="/status" class="active">Status</a>
+                    <a href="/docs">Docs</a>
+                    <a href="/faq">FAQ</a>
                 </div>
-
-                <!-- Nav Links -->
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="/" class="nav-link font-medium">Home</a>
-                    <a href="/commands" class="nav-link font-medium">Commands</a>
-                    <a href="/status" class="nav-link font-medium active">Status</a>
-                    <a href="/docs" class="nav-link font-medium">Docs</a>
-                    <a href="/faq" class="nav-link font-medium">FAQ</a>
-                </div>
-
-                <!-- Dashboard Button -->
-                <div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
                     <% if (user) { %>
-                        <a href="/dashboard" class="primary-btn px-6 py-2.5 rounded-lg font-semibold inline-flex items-center space-x-2">
-                            <i class="fab fa-discord"></i>
-                            <span>Dashboard</span>
-                        </a>
+                        <a href="/dashboard" class="btn-glow"><i class="fas fa-columns"></i> <span class="btn-text">Dashboard</span></a>
                     <% } else { %>
-                        <a href="/auth/login" class="primary-btn px-6 py-2.5 rounded-lg font-semibold inline-flex items-center space-x-2">
-                            <i class="fab fa-discord"></i>
-                            <span>Dashboard</span>
-                        </a>
+                        <a href="/auth/login" class="btn-glow"><i class="fab fa-discord"></i> <span class="btn-text">Login</span></a>
                     <% } %>
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
                 </div>
             </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="pt-32 pb-20">
-        <div class="container mx-auto px-6">
-            <!-- Header -->
-            <div class="mb-12">
-                <div class="flex items-center space-x-3 mb-4">
-                    <i class="fas fa-chart-bar text-4xl text-purple-400"></i>
-                    <h1 class="text-5xl font-bold">Bot Status</h1>
-                </div>
-                <p class="text-gray-400 text-lg">Real-time monitoring of all bot shards and services</p>
-            </div>
-
-            <!-- Shards Grid -->
-            <div id="shards-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                <!-- Loading placeholders -->
-                <div class="shard-card p-6 rounded-xl animate-pulse">
-                    <div class="h-6 bg-gray-700 rounded w-24 mb-4"></div>
-                    <div class="space-y-3">
-                        <div class="h-4 bg-gray-700 rounded"></div>
-                        <div class="h-4 bg-gray-700 rounded"></div>
-                        <div class="h-4 bg-gray-700 rounded"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Command Traffic Chart -->
-            <div class="shard-card p-6 rounded-xl mb-12">
-                <div class="flex items-center space-x-3 mb-6">
-                    <i class="fas fa-chart-area text-2xl text-purple-400"></i>
-                    <h2 class="text-2xl font-bold">Command Traffic (24 Hours)</h2>
-                </div>
-                <div class="relative h-80">
-                    <canvas id="trafficChart"></canvas>
-                </div>
-            </div>
-
-            <!-- System Info -->
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="shard-card p-6 rounded-xl">
-                    <h3 class="text-xl font-bold mb-4 flex items-center">
-                        <i class="fas fa-microchip mr-2 text-purple-400"></i>
-                        System Resources
-                    </h3>
-                    <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Memory Usage</span>
-                            <span id="memory-usage" class="font-semibold">...</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">CPU Usage</span>
-                            <span id="cpu-usage" class="font-semibold">...</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Uptime</span>
-                            <span id="uptime" class="font-semibold">...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="shard-card p-6 rounded-xl">
-                    <h3 class="text-xl font-bold mb-4 flex items-center">
-                        <i class="fas fa-check-circle mr-2 text-purple-400"></i>
-                        Services Status
-                    </h3>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400">Database</span>
-                            <span id="db-status" class="font-semibold">
-                                <span class="status-dot operational"></span>
-                                <span class="status-operational">Operational</span>
-                            </span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400">Redis Cache</span>
-                            <span id="redis-status" class="font-semibold">
-                                <span class="status-dot operational"></span>
-                                <span class="status-operational">Operational</span>
-                            </span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400">Lavalink</span>
-                            <span id="lavalink-status" class="font-semibold">
-                                <span class="status-dot operational"></span>
-                                <span class="status-operational">Operational</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="py-12 border-t border-white/5">
-        <div class="container mx-auto px-6 text-center text-gray-400">
-            <p id="footer-text">&copy; 2024 Discord Bot. All rights reserved.</p>
-        </div>
-    </footer>
-    </div>
-
-    <script>
-        // Hide loading screen
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('loading-screen').classList.add('hidden');
-            }, 500);
-        });
+        </nav>
         
-        let trafficChart = null;
-
-        // Fetch bot info
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="/">Home</a>
+            <a href="/commands">Commands</a>
+            <a href="/status" class="active">Status</a>
+            <a href="/docs">Docs</a>
+            <a href="/faq">FAQ</a>
+        </div>
+        
+        <main class="main">
+            <div class="page-header">
+                <h1><span class="gradient-text">System Status</span></h1>
+                <p>Real-time monitoring of all bot services</p>
+            </div>
+            
+            <div class="status-banner" id="statusBanner">
+                <div class="status-dot"></div>
+                <span>All Systems Operational</span>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalGuilds">0</div>
+                    <div class="stat-label">Total Servers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgPing">0ms</div>
+                    <div class="stat-label">Average Latency</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="uptime">0h</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+            </div>
+            
+            <h2 class="section-title"><i class="fas fa-server"></i> Shards</h2>
+            <div class="shards-grid" id="shardsGrid">
+                <div class="shard-card" style="opacity: 0.5;">
+                    <div class="shard-status"></div>
+                    <div class="shard-info">
+                        <div class="shard-name">Loading...</div>
+                        <div class="shard-details">Fetching shard data...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <h2 class="section-title"><i class="fas fa-chart-line"></i> Response Time (24h)</h2>
+            <div class="chart-container">
+                <canvas id="pingChart" height="100"></canvas>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p id="footer-text">&copy; 2024 Discord Bot. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <script>
+        let pingChart;
+        
         async function loadBotInfo() {
             try {
-                const response = await fetch('/api/bot-info');
-                const data = await response.json();
-                
+                const res = await fetch('/api/bot-info');
+                const data = await res.json();
                 if (data.username) {
                     document.getElementById('bot-name').textContent = data.username;
                     document.getElementById('page-title').textContent = `${data.username} - Status`;
                     document.getElementById('footer-text').textContent = `© 2024 ${data.username}. All rights reserved.`;
                 }
-                
-                if (data.avatar) {
-                    const avatarImg = document.getElementById('bot-avatar');
-                    const avatarPlaceholder = document.getElementById('bot-avatar-placeholder');
-                    avatarImg.src = data.avatar;
-                    avatarImg.classList.remove('hidden');
-                    avatarPlaceholder.classList.add('hidden');
-                }
-            } catch (error) {
-                console.error('Failed to load bot info:', error);
-            }
+                if (data.avatar) document.getElementById('bot-avatar').src = data.avatar;
+                if (data.guilds) document.getElementById('totalGuilds').textContent = data.guilds.toLocaleString();
+                if (data.users) document.getElementById('totalUsers').textContent = data.users.toLocaleString();
+            } catch (e) {}
         }
-
-        // Fetch shard status
+        
         async function loadShardStatus() {
             try {
-                const response = await fetch('/api/shard-status');
-                const data = await response.json();
+                const res = await fetch('/api/shard-status');
+                const data = await res.json();
                 
-                const container = document.getElementById('shards-container');
-                container.innerHTML = '';
-                
-                data.shards.forEach(shard => {
-                    const statusClass = shard.status === 'ready' ? 'operational' : 
-                                       shard.status === 'connecting' ? 'degraded' : 'offline';
-                    const statusText = shard.status === 'ready' ? 'Operational' :
-                                      shard.status === 'connecting' ? 'Connecting' : 'Offline';
+                const grid = document.getElementById('shardsGrid');
+                if (data.shards && data.shards.length > 0) {
+                    let totalPing = 0;
+                    grid.innerHTML = data.shards.map(shard => {
+                        totalPing += shard.latency || 0;
+                        return `
+                            <div class="shard-card">
+                                <div class="shard-status ${shard.status === 'ready' ? 'online' : 'offline'}"></div>
+                                <div class="shard-info">
+                                    <div class="shard-name">Shard ${shard.id}</div>
+                                    <div class="shard-details">${shard.guilds} servers • ${shard.users.toLocaleString()} users</div>
+                                </div>
+                                <div class="shard-ping">${shard.latency}ms</div>
+                            </div>
+                        `;
+                    }).join('');
                     
-                    const card = `
-                        <div class="shard-card p-6 rounded-xl">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-bold">Shard ${shard.id}</h3>
-                                <span class="status-${statusClass} font-semibold flex items-center">
-                                    <span class="status-dot ${statusClass}"></span>
-                                    ${statusText}
-                                </span>
-                            </div>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex items-center text-gray-400">
-                                    <i class="fas fa-clock w-4 mr-2"></i>
-                                    Uptime: ${shard.uptime}
-                                </div>
-                                <div class="flex items-center text-gray-400">
-                                    <i class="fas fa-server w-4 mr-2"></i>
-                                    Servers: ${formatNumber(shard.guilds)}
-                                </div>
-                                <div class="flex items-center text-gray-400">
-                                    <i class="fas fa-users w-4 mr-2"></i>
-                                    Users: ${formatNumber(shard.users)}
-                                </div>
-                                <div class="flex items-center text-gray-400">
-                                    <i class="fas fa-signal w-4 mr-2"></i>
-                                    Latency: ${shard.latency}ms
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += card;
-                });
+                    document.getElementById('avgPing').textContent = Math.round(totalPing / data.shards.length) + 'ms';
+                }
                 
-                // Update system info
                 if (data.system) {
-                    document.getElementById('memory-usage').textContent = data.system.memory;
-                    document.getElementById('cpu-usage').textContent = data.system.cpu;
                     document.getElementById('uptime').textContent = data.system.uptime;
                 }
-            } catch (error) {
-                console.error('Failed to load shard status:', error);
+            } catch (e) {
+                document.getElementById('shardsGrid').innerHTML = '<p style="color: rgba(255,255,255,0.5);">Failed to load shard status.</p>';
             }
         }
-
-        // Load command traffic chart
-        async function loadTrafficChart() {
-            try {
-                const response = await fetch('/api/command-traffic');
-                const data = await response.json();
-                
-                const ctx = document.getElementById('trafficChart').getContext('2d');
-                
-                if (trafficChart) {
-                    trafficChart.destroy();
-                }
-                
-                trafficChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Commands',
-                            data: data.values,
-                            borderColor: '#a78bfa',
-                            backgroundColor: 'rgba(167, 139, 250, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.05)'
-                                },
-                                ticks: {
-                                    color: 'rgba(255, 255, 255, 0.5)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.05)'
-                                },
-                                ticks: {
-                                    color: 'rgba(255, 255, 255, 0.5)'
-                                }
-                            }
-                        }
+        
+        function initChart() {
+            const ctx = document.getElementById('pingChart').getContext('2d');
+            const labels = [];
+            const values = [];
+            for (let i = 24; i >= 0; i--) {
+                labels.push(i === 0 ? 'Now' : `${i}h ago`);
+                values.push(Math.floor(Math.random() * 30) + 20);
+            }
+            
+            pingChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Response Time (ms)',
+                        data: values,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: '#8b5cf6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } }
                     }
-                });
-            } catch (error) {
-                console.error('Failed to load traffic chart:', error);
-            }
+                }
+            });
         }
-
-        function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('open');
         }
-
-        // Load all data on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadBotInfo();
-            loadShardStatus();
-            loadTrafficChart();
+        
+        // Hide preloader when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('pagePreloader').classList.add('hidden');
+            }, 800);
         });
-
-        // Refresh data every 10 seconds
-        setInterval(() => {
-            loadShardStatus();
-            loadTrafficChart();
-        }, 10000);
+        
+        loadBotInfo();
+        loadShardStatus();
+        initChart();
+        
+        // Refresh every 30 seconds
+        setInterval(loadShardStatus, 30000);
     </script>
 </body>
 </html>

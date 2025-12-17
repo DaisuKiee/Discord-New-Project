@@ -5,6 +5,23 @@ const router = Router();
 
 router.use(checkAuth);
 
+// Helper function to check if bot is in guild
+async function checkBotInGuild(guildId) {
+    try {
+        const manager = global.shardManager;
+        if (manager) {
+            const results = await manager.broadcastEval((client, context) => {
+                const g = client.guilds.cache.get(context.guildId);
+                return g ? { found: true, name: g.name } : { found: false };
+            }, { context: { guildId } });
+            return results.some(r => r.found);
+        }
+    } catch (error) {
+        console.error('Failed to check bot in guild:', error);
+    }
+    return false;
+}
+
 router.get('/', async (req, res) => {
     const managedGuilds = req.user.guilds.filter(g => (g.permissions & 0x20) === 0x20); // MANAGE_GUILD
     res.render('dashboard/home', {
@@ -30,6 +47,7 @@ router.get('/guild/:id', async (req, res) => {
         commandsUsed: 0,
         guildIcon: null
     };
+    let botInGuild = false;
 
     try {
         const manager = global.shardManager;
@@ -50,6 +68,7 @@ router.get('/guild/:id', async (req, res) => {
 
             const foundGuild = results.find(r => r.found);
             if (foundGuild) {
+                botInGuild = true;
                 guildStats = {
                     memberCount: foundGuild.memberCount,
                     channelCount: foundGuild.channelCount,
@@ -67,12 +86,17 @@ router.get('/guild/:id', async (req, res) => {
         user: req.user,
         guildId,
         guildName: guild.name,
+        botInGuild,
         ...guildStats
     });
 });
 
 router.get('/guild/:id/modules', async (req, res) => {
     const { prisma } = await import('../../src/utils/database.js');
+    const { readdirSync } = await import('fs');
+    const { join, dirname } = await import('path');
+    const { fileURLToPath } = await import('url');
+    
     const guildId = req.params.id;
     const userGuilds = req.user.guilds.filter(g => (g.permissions & 0x20) === 0x20);
     
@@ -81,11 +105,40 @@ router.get('/guild/:id/modules', async (req, res) => {
         return res.redirect('/dashboard');
     }
 
+    // Check if bot is in guild
+    const botInGuild = await checkBotInGuild(guildId);
+    if (!botInGuild) {
+        return res.redirect(`/dashboard/guild/${guildId}`);
+    }
+
+    // Fetch actual command categories and counts from the bot
+    let commandCategories = [];
+    try {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const commandsPath = join(__dirname, '../../src/commands');
+        const categories = readdirSync(commandsPath, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+        
+        for (const category of categories) {
+            const categoryPath = join(commandsPath, category);
+            const commands = readdirSync(categoryPath).filter(file => file.endsWith('.js'));
+            commandCategories.push({
+                name: category,
+                commandCount: commands.length,
+                commands: commands.map(f => f.replace('.js', ''))
+            });
+        }
+    } catch (error) {
+        console.error('Failed to fetch command categories:', error);
+    }
+
     const guildData = await prisma.guild.findUnique({
         where: { guildId }
     });
 
-    let modules = { moderation: false, economy: false, leveling: false, ai: false, tickets: false, welcome: false };
+    let modules = { moderation: true, ai: true, music: false, utility: false, config: true, tickets: true, welcome: true };
     if (guildData?.modulesEnabled) {
         modules = typeof guildData.modulesEnabled === 'string' 
             ? JSON.parse(guildData.modulesEnabled) 
@@ -96,7 +149,8 @@ router.get('/guild/:id/modules', async (req, res) => {
         user: req.user,
         guildId,
         guildName: guild.name,
-        modules
+        modules,
+        commandCategories
     });
 });
 
@@ -106,6 +160,12 @@ router.get('/guild/:id/settings', async (req, res) => {
     const guild = userGuilds.find(g => g.id === guildId);
     
     if (!guild) return res.redirect('/dashboard');
+    
+    // Check if bot is in guild
+    const botInGuild = await checkBotInGuild(guildId);
+    if (!botInGuild) {
+        return res.redirect(`/dashboard/guild/${guildId}`);
+    }
     
     res.render('dashboard/settings', {
         user: req.user,
@@ -121,6 +181,12 @@ router.get('/guild/:id/moderation', async (req, res) => {
     
     if (!guild) return res.redirect('/dashboard');
     
+    // Check if bot is in guild
+    const botInGuild = await checkBotInGuild(guildId);
+    if (!botInGuild) {
+        return res.redirect(`/dashboard/guild/${guildId}`);
+    }
+    
     res.render('dashboard/moderation', {
         user: req.user,
         guildId,
@@ -134,6 +200,12 @@ router.get('/guild/:id/analytics', async (req, res) => {
     const guild = userGuilds.find(g => g.id === guildId);
     
     if (!guild) return res.redirect('/dashboard');
+    
+    // Check if bot is in guild
+    const botInGuild = await checkBotInGuild(guildId);
+    if (!botInGuild) {
+        return res.redirect(`/dashboard/guild/${guildId}`);
+    }
     
     res.render('dashboard/analytics', {
         user: req.user,
@@ -149,6 +221,12 @@ router.get('/guild/:id/welcome', async (req, res) => {
     const guild = userGuilds.find(g => g.id === guildId);
     
     if (!guild) return res.redirect('/dashboard');
+
+    // Check if bot is in guild
+    const botInGuild = await checkBotInGuild(guildId);
+    if (!botInGuild) {
+        return res.redirect(`/dashboard/guild/${guildId}`);
+    }
 
     // Fetch guild channels (mock for now - you'll need to fetch from Discord API)
     const channels = [
@@ -186,6 +264,12 @@ router.get('/guild/:id/sticky', async (req, res) => {
     
     if (!guild) return res.redirect('/dashboard');
 
+    // Check if bot is in guild
+    const botInGuild = await checkBotInGuild(guildId);
+    if (!botInGuild) {
+        return res.redirect(`/dashboard/guild/${guildId}`);
+    }
+
     const channels = [
         { id: '1', name: 'general' },
         { id: '2', name: 'announcements' },
@@ -218,6 +302,12 @@ router.get('/guild/:id/tickets', async (req, res) => {
     const guild = userGuilds.find(g => g.id === guildId);
     
     if (!guild) return res.redirect('/dashboard');
+
+    // Check if bot is in guild
+    const botInGuild = await checkBotInGuild(guildId);
+    if (!botInGuild) {
+        return res.redirect(`/dashboard/guild/${guildId}`);
+    }
 
     // Fetch channels, categories, and roles from the bot
     let channels = [];

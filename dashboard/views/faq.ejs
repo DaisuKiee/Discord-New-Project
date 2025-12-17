@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">FAQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #030014; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: #fff; min-height: 100vh; }
+        
+        /* Loading Preloader */
+        .page-preloader { position: fixed; inset: 0; background: #030014; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease; }
+        .page-preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-spinner { width: 50px; height: 50px; border: 3px solid rgba(236, 72, 153, 0.2); border-top-color: #ec4899; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text { color: rgba(255, 255, 255, 0.6); font-size: 0.95rem; }
+        
+        .grid-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px); background-size: 60px 60px; z-index: 0; }
+        .orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.4; z-index: 0; }
+        .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%); top: -100px; right: -100px; }
+        .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%); bottom: -100px; left: -100px; }
+        
+        .content { position: relative; z-index: 10; }
+        
+        .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1rem 2rem; background: rgba(3, 0, 20, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(139, 92, 246, 0.1); }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+        .nav-brand img { width: 44px; height: 44px; border-radius: 12px; border: 2px solid rgba(139, 92, 246, 0.3); }
+        .nav-brand span { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-links a { color: rgba(255, 255, 255, 0.7); text-decoration: none; font-weight: 500; transition: all 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: #fff; }
+        .btn-glow { background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); padding: 12px 28px; border-radius: 12px; font-weight: 600; text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 8px; }
+        
+        .main { padding: 120px 2rem 60px; max-width: 900px; margin: 0 auto; }
+        .page-header { text-align: center; margin-bottom: 3rem; }
+        .page-header h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; }
+        .gradient-text { background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: rgba(255, 255, 255, 0.6); font-size: 1.2rem; }
+        
+        .faq-list { display: flex; flex-direction: column; gap: 1rem; }
+        
+        .faq-item {
+            background: rgba(20, 20, 30, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .faq-item:hover { border-color: rgba(139, 92, 246, 0.3); }
+        .faq-item.open { border-color: rgba(139, 92, 246, 0.4); }
+        
+        .faq-question {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .faq-question i {
+            color: #8b5cf6;
+            transition: transform 0.3s;
+        }
+        .faq-item.open .faq-question i { transform: rotate(180deg); }
+        
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        .faq-item.open .faq-answer {
+            max-height: 500px;
+            padding: 0 1.5rem 1.5rem;
+        }
+        .faq-answer p {
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.8;
+        }
+        .faq-answer a { color: #a78bfa; }
+        
+        .contact-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 3rem;
+        }
+        .contact-card h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .contact-card p { color: rgba(255, 255, 255, 0.6); margin-bottom: 1.5rem; }
+        .contact-btn {
+            background: linear-gradient(135deg, #5865f2 0%, #4752c4 100%);
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        .contact-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(88, 101, 242, 0.3); }
+        
+        .footer { padding: 3rem 2rem; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center; color: rgba(255, 255, 255, 0.4); }
+        
+        /* Mobile Menu */
+        .mobile-menu-btn { display: none; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        .mobile-menu { display: none; position: fixed; top: 76px; left: 0; right: 0; background: rgba(3, 0, 20, 0.98); backdrop-filter: blur(20px); padding: 1rem; border-bottom: 1px solid rgba(139, 92, 246, 0.1); z-index: 99; }
+        .mobile-menu.open { display: block; }
+        .mobile-menu a { display: block; padding: 1rem; color: rgba(255, 255, 255, 0.7); text-decoration: none; border-radius: 8px; }
+        .mobile-menu a:hover, .mobile-menu a.active { background: rgba(139, 92, 246, 0.1); color: #fff; }
+        
+        @media (max-width: 768px) {
+            .nav { padding: 0.875rem 1rem; }
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: block; }
+            .nav-brand span { font-size: 1.1rem; }
+            .btn-glow { padding: 10px 16px; font-size: 0.875rem; }
+            .main { padding: 100px 1rem 40px; }
+            .page-header { margin-bottom: 2rem; }
+            .page-header h1 { font-size: 1.75rem; }
+            .page-header p { font-size: 0.95rem; }
+            .faq-list { gap: 0.75rem; }
+            .faq-item { border-radius: 14px; }
+            .faq-question { padding: 1.125rem 1rem; font-size: 0.95rem; }
+            .faq-question i { font-size: 0.8rem; }
+            .faq-item.open .faq-answer { padding: 0 1rem 1rem; }
+            .faq-answer p { font-size: 0.9rem; line-height: 1.7; }
+            .contact-card { padding: 1.5rem; margin-top: 2rem; border-radius: 16px; }
+            .contact-card h3 { font-size: 1.2rem; }
+            .contact-card p { font-size: 0.9rem; margin-bottom: 1.25rem; }
+            .contact-btn { padding: 12px 24px; font-size: 0.9rem; }
+            .orb { opacity: 0.25; }
+            .orb-1 { width: 300px; height: 300px; top: -100px; right: -100px; }
+            .orb-2 { width: 250px; height: 250px; bottom: -100px; left: -100px; }
+            .footer { padding: 2rem 1rem; font-size: 0.85rem; }
+        }
+        
+        @media (max-width: 480px) {
+            .nav { padding: 0.75rem; }
+            .nav-brand img { width: 36px; height: 36px; border-radius: 10px; }
+            .nav-brand span { display: none; }
+            .btn-glow .btn-text { display: none; }
+            .btn-glow { padding: 10px 12px; }
+            .main { padding: 90px 0.875rem 30px; }
+            .page-header { margin-bottom: 1.5rem; }
+            .page-header h1 { font-size: 1.5rem; }
+            .page-header p { font-size: 0.875rem; }
+            .faq-list { gap: 0.625rem; }
+            .faq-item { border-radius: 12px; }
+            .faq-question { padding: 1rem 0.875rem; font-size: 0.875rem; }
+            .faq-item.open .faq-answer { padding: 0 0.875rem 0.875rem; }
+            .faq-answer p { font-size: 0.85rem; }
+            .contact-card { padding: 1.25rem; margin-top: 1.5rem; border-radius: 14px; }
+            .contact-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+            .contact-card p { font-size: 0.85rem; margin-bottom: 1rem; }
+            .contact-btn { padding: 11px 20px; font-size: 0.85rem; border-radius: 10px; }
+            .orb { opacity: 0.15; }
+            .orb-1 { width: 200px; height: 200px; }
+            .orb-2 { width: 150px; height: 150px; }
+            .footer { padding: 1.5rem 0.875rem; font-size: 0.8rem; }
+            .mobile-menu { padding: 0.75rem; }
+            .mobile-menu a { padding: 0.75rem; font-size: 0.9rem; }
+        }
+        
+        @media (max-width: 360px) {
+            .page-header h1 { font-size: 1.375rem; }
+            .faq-question { font-size: 0.825rem; padding: 0.875rem 0.75rem; }
+            .faq-answer p { font-size: 0.8rem; }
+            .contact-card h3 { font-size: 1rem; }
+            .contact-btn { padding: 10px 16px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Preloader -->
+    <div class="page-preloader" id="pagePreloader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading FAQ...</div>
+    </div>
+
+    <div class="grid-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    
+    <div class="content">
+        <nav class="nav">
+            <div class="nav-container">
+                <a href="/" class="nav-brand">
+                    <img id="bot-avatar" src="/images/bot-avatar.svg" alt="Bot">
+                    <span id="bot-name">Dashboard</span>
+                </a>
+                <div class="nav-links">
+                    <a href="/">Home</a>
+                    <a href="/commands">Commands</a>
+                    <a href="/status">Status</a>
+                    <a href="/docs">Docs</a>
+                    <a href="/faq" class="active">FAQ</a>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <% if (user) { %>
+                        <a href="/dashboard" class="btn-glow"><i class="fas fa-columns"></i> <span class="btn-text">Dashboard</span></a>
+                    <% } else { %>
+                        <a href="/auth/login" class="btn-glow"><i class="fab fa-discord"></i> <span class="btn-text">Login</span></a>
+                    <% } %>
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="/">Home</a>
+            <a href="/commands">Commands</a>
+            <a href="/status">Status</a>
+            <a href="/docs">Docs</a>
+            <a href="/faq" class="active">FAQ</a>
+        </div>
+        
+        <main class="main">
+            <div class="page-header">
+                <h1><span class="gradient-text">Frequently Asked Questions</span></h1>
+                <p>Find answers to common questions about the bot</p>
+            </div>
+            
+            <div class="faq-list">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I add the bot to my server?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Click the "Add to Discord" button on our homepage. You'll need "Manage Server" permission on the server you want to add the bot to. Follow the Discord authorization flow and select your server.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Is the bot free to use?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes! The bot is completely free to use with all core features. We offer optional premium features for power users who want extra capabilities like 24/7 music, more AI requests, and priority support.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I use slash commands?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Simply type <code>/</code> in any channel where the bot has access. Discord will show you a list of available commands. Select a command and fill in any required options. Press Enter to execute.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Why isn't the bot responding to my commands?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Check these common issues: 1) Make sure the bot has permission to read and send messages in the channel. 2) Verify the bot is online (check /status). 3) Try re-inviting the bot with proper permissions. 4) Wait a few minutes as Discord may be slow to sync commands.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I set up the music feature?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Join a voice channel and use <code>/play [song name or URL]</code>. The bot will join your voice channel and start playing. You can use <code>/queue</code> to see upcoming songs, <code>/skip</code> to skip, and <code>/volume</code> to adjust volume.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I configure the bot settings?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Use our web dashboard! Click "Dashboard" in the navigation, log in with Discord, and select your server. From there you can configure all bot settings, enable/disable modules, set up welcome messages, tickets, and more.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What music sources are supported?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>We support YouTube, Spotify, SoundCloud, Apple Music, Deezer, and direct audio links. For Spotify and Apple Music, we search for matching tracks on YouTube for playback.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Can I use the AI features?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes! Use <code>/ask</code> to chat with AI (GPT-4, Claude, or Gemini), <code>/imagine</code> to generate images, and <code>/summarize</code> to summarize conversations. Free users get a daily limit, premium users get unlimited access.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How do I report a bug or suggest a feature?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Join our <a href="/support">support server</a> and use the appropriate channels for bug reports or suggestions. You can also use <code>/feedback</code> command directly in Discord to send us feedback.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="contact-card">
+                <h3>Still have questions?</h3>
+                <p>Join our support server and our team will be happy to help!</p>
+                <a href="/support" class="contact-btn">
+                    <i class="fab fa-discord"></i> Join Support Server
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p id="footer-text">&copy; 2024 Discord Bot. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <script>
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('open');
+        }
+        
+        // FAQ accordion
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const item = question.parentElement;
+                const wasOpen = item.classList.contains('open');
+                
+                // Close all items
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+                
+                // Open clicked item if it wasn't open
+                if (!wasOpen) {
+                    item.classList.add('open');
+                }
+            });
+        });
+        
+        async function loadBotInfo() {
+            try {
+                const res = await fetch('/api/bot-info');
+                const data = await res.json();
+                if (data.username) {
+                    document.getElementById('bot-name').textContent = data.username;
+                    document.getElementById('page-title').textContent = `${data.username} - FAQ`;
+                    document.getElementById('footer-text').textContent = `© 2024 ${data.username}. All rights reserved.`;
+                }
+                if (data.avatar) document.getElementById('bot-avatar').src = data.avatar;
+            } catch (e) {}
+        }
+        
+        // Hide preloader when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('pagePreloader').classList.add('hidden');
+            }, 800);
+        });
+        
+        loadBotInfo();
+    </script>
+</body>
+</html>
