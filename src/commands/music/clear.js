@@ -19,8 +19,26 @@ export default class ClearQueueCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: []
         });
+    }
+
+    async run(message, args) {
+        const client = message.client;
+        const player = client.music.getPlayer(message.guild.id);
+        
+        if (!player) {
+            return message.reply('❌ Nothing is playing!');
+        }
+
+        const voiceChannel = message.member.voice.channel;
+        if (!voiceChannel || voiceChannel.id !== player.voiceChannel) {
+            return message.reply('❌ You need to be in the same voice channel!');
+        }
+
+        player.queue.clear();
+        return message.reply('🗑️ Queue cleared!');
     }
 
     async slashRun(interaction) {

@@ -20,6 +20,7 @@ export default class BanCommand extends Command {
                 user: [PermissionFlagsBits.BanMembers]
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'user',
@@ -41,6 +42,24 @@ export default class BanCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const client = message.client;
+        const user = message.mentions.users.first();
+        if (!user) {
+            return message.reply('❌ Please mention a user to ban!');
+        }
+
+        const reason = args.slice(1).join(' ') || 'No reason provided';
+
+        try {
+            const modCase = await client.moderation.ban(message.guild, user, message.author, reason);
+            const embed = client.moderation.createCaseEmbed(modCase, user, message.author);
+            return message.reply({ embeds: [embed] });
+        } catch (error) {
+            return message.reply('❌ Failed to ban user.');
+        }
     }
 
     async slashRun(interaction) {

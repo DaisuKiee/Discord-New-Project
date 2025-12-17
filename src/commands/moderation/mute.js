@@ -20,6 +20,7 @@ export default class MuteCommand extends Command {
                 user: [PermissionFlagsBits.ModerateMembers]
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'user',
@@ -41,6 +42,30 @@ export default class MuteCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const client = message.client;
+        const user = message.mentions.users.first();
+        if (!user) {
+            return message.reply('❌ Please mention a user to mute!');
+        }
+
+        const durationStr = args[1] || '1h';
+        const reason = args.slice(2).join(' ') || 'No reason provided';
+        const duration = this.parseDuration(durationStr);
+
+        if (!duration) {
+            return message.reply('❌ Invalid duration! Use: 1h, 30m, 7d');
+        }
+
+        try {
+            const modCase = await client.moderation.mute(message.guild, user, message.author, reason, duration);
+            const embed = client.moderation.createCaseEmbed(modCase, user, message.author);
+            return message.reply({ embeds: [embed] });
+        } catch (error) {
+            return message.reply('❌ Failed to mute user.');
+        }
     }
 
     async slashRun(interaction) {

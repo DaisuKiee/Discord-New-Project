@@ -19,8 +19,31 @@ export default class ShuffleCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: []
         });
+    }
+
+    async run(message, args) {
+        const client = message.client;
+        const player = client.music.getPlayer(message.guild.id);
+        
+        if (!player || !player.queue.length) {
+            return message.reply('❌ Queue is empty!');
+        }
+
+        const voiceChannel = message.member.voice.channel;
+        if (!voiceChannel || voiceChannel.id !== player.voiceChannel) {
+            return message.reply('❌ You need to be in the same voice channel!');
+        }
+
+        // Shuffle queue
+        for (let i = player.queue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [player.queue[i], player.queue[j]] = [player.queue[j], player.queue[i]];
+        }
+
+        return message.reply('🔀 Queue shuffled!');
     }
 
     async slashRun(interaction) {

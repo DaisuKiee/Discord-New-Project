@@ -19,11 +19,13 @@ export default class QueueCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: []
         });
     }
 
-    async run(client, message) {
+    async run(message, args) {
+        const client = message.client;
         const player = client.music.getPlayer(message.guild.id);
         
         if (!player || !player.currentTrack) {
@@ -32,21 +34,44 @@ export default class QueueCommand extends Command {
 
         const current = player.currentTrack;
         const queue = player.queue;
+        const { createContainer, createPaginationButtons } = await import('../../utils/components.js');
+        const { MessageFlags } = await import('discord.js');
 
-        const embed = new EmbedBuilder()
-            .setColor(client.color.info)
-            .setTitle('🎵 Music Queue')
-            .setDescription(`**Now Playing:**\n[${current.info.title}](${current.info.uri}) - \`${client.music.formatTime(current.info.length)}\``)
-            .setThumbnail(current.info.artworkUrl || current.info.thumbnail)
-            .addFields({
-                name: 'Up Next',
-                value: queue.slice(0, 10).map((song, i) => 
-                    `${i + 1}. [${song.info.title}](${song.info.uri}) - \`${client.music.formatTime(song.info.length)}\``
-                ).join('\n') || 'No songs in queue'
-            })
-            .setFooter({ text: `${queue.length} song(s) in queue | Volume: ${player.volume}%` });
+        const sections = [
+            {
+                title: '🎵 Music Queue',
+                thumbnail: current.info.artworkUrl || current.info.thumbnail,
+                separator: true
+            },
+            {
+                title: '▶️ Now Playing',
+                description: `**[${current.info.title}](${current.info.uri})**\nDuration: ${client.music.formatTime(current.info.length)}`,
+                separator: true
+            }
+        ];
 
-        return message.reply({ embeds: [embed] });
+        if (queue.length > 0) {
+            const queueList = queue.slice(0, 10).map((song, i) => 
+                `**${i + 1}.** [${song.info.title}](${song.info.uri}) - \`${client.music.formatTime(song.info.length)}\``
+            ).join('\n');
+            sections.push({ title: '📋 Up Next', description: queueList });
+        } else {
+            sections.push({ description: '📭 No songs in queue' });
+        }
+
+        sections.push({ separator: true }, {
+            description: `📊 **Total:** ${queue.length} song(s) | 🔊 **Volume:** ${player.volume}%`
+        });
+
+        const container = createContainer(sections);
+        if (queue.length > 10) {
+            container.addActionRowComponents(createPaginationButtons(1, Math.ceil(queue.length / 10)));
+        }
+
+        return message.reply({ 
+            components: [container],
+            flags: MessageFlags.IsComponentsV2
+        });
     }
 
     async slashRun(interaction) {

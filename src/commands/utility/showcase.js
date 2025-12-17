@@ -19,6 +19,7 @@ export default class ShowcaseCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'type',
@@ -34,6 +35,15 @@ export default class ShowcaseCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const { EmbedBuilder } = await import('discord.js');
+        const embed = new EmbedBuilder()
+            .setColor(message.client.color.info)
+            .setTitle('🎨 Components Showcase')
+            .setDescription('Use `/showcase` slash command to see interactive component demos!');
+        return message.reply({ embeds: [embed] });
     }
 
     async slashRun(interaction) {

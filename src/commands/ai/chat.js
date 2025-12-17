@@ -20,6 +20,7 @@ export default class ChatCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'message',
@@ -43,8 +44,11 @@ export default class ChatCommand extends Command {
         });
     }
 
-    async run(client, message, args, data) {
+    async run(message, args) {
+        const client = message.client;
         const query = args.join(' ');
+        
+        if (!query) return message.reply('❌ Please provide a message!');
         
         await message.channel.sendTyping();
 
@@ -54,14 +58,30 @@ export default class ChatCommand extends Command {
                 guildId: message.guild?.id
             });
 
-            const embed = new EmbedBuilder()
-                .setColor(client.color.info)
-                .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() })
-                .setDescription(response.content)
-                .setFooter({ text: `Model: ${response.provider} | Tokens: ${response.tokensUsed}` })
-                .setTimestamp();
+            const { createContainer } = await import('../../utils/components.js');
+            const { MessageFlags } = await import('discord.js');
 
-            return message.reply({ embeds: [embed] });
+            const container = createContainer([
+                {
+                    title: '🤖 AI Response',
+                    thumbnail: message.author.displayAvatarURL(),
+                    separator: true
+                },
+                {
+                    description: response.content
+                },
+                {
+                    separator: true
+                },
+                {
+                    description: `📊 **Model:** ${response.provider} | **Tokens:** ${response.tokensUsed}`
+                }
+            ]);
+
+            return message.reply({ 
+                components: [container],
+                flags: MessageFlags.IsComponentsV2
+            });
         } catch (error) {
             client.logger.error('AI Chat Error:', error);
             return message.reply('❌ Failed to get AI response. Please try again later.');

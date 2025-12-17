@@ -20,7 +20,44 @@ export default class StatsCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: []
+        });
+    }
+
+    async run(message, args) {
+        const client = message.client;
+        const { createContainer } = await import('../../utils/components.js');
+        const { MessageFlags } = await import('discord.js');
+        
+        const totalMembers = client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
+        const uptime = this.formatUptime(client.uptime);
+        const memoryUsage = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+
+        const container = createContainer([
+            {
+                title: '📊 Bot Statistics',
+                thumbnail: client.user.displayAvatarURL(),
+                separator: true
+            },
+            {
+                title: '📈 General Stats',
+                description: `🏠 **Servers:** ${client.guilds.cache.size.toLocaleString()}\n👥 **Users:** ${totalMembers.toLocaleString()}\n📝 **Commands:** ${client.commands.size}`,
+                separator: true
+            },
+            {
+                title: '⚡ Performance',
+                description: `⏰ **Uptime:** ${uptime}\n💾 **Memory:** ${memoryUsage} MB\n🏓 **Ping:** ${Math.round(client.ws.ping)}ms`,
+                separator: true
+            },
+            {
+                description: `**Shard:** ${message.guild.shardId + 1}/${client.shard?.count || 1}`
+            }
+        ]);
+
+        return message.reply({ 
+            components: [container],
+            flags: MessageFlags.IsComponentsV2
         });
     }
 

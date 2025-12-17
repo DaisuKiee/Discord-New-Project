@@ -21,6 +21,7 @@ export default class PrefixCommand extends Command {
                 user: [PermissionFlagsBits.ManageGuild]
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'new_prefix',
@@ -31,6 +32,20 @@ export default class PrefixCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const newPrefix = args[0];
+        if (!newPrefix) return message.reply('❌ Please provide a new prefix!');
+        if (newPrefix.length > 5) return message.reply('❌ Prefix must be 5 characters or less!');
+
+        await prisma.guild.upsert({
+            where: { guildId: message.guild.id },
+            update: { prefix: newPrefix },
+            create: { guildId: message.guild.id, prefix: newPrefix }
+        });
+
+        return message.reply(`✅ Prefix changed to \`${newPrefix}\``);
     }
 
     async slashRun(interaction) {

@@ -19,6 +19,7 @@ export default class VolumeCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'level',
@@ -32,7 +33,8 @@ export default class VolumeCommand extends Command {
         });
     }
 
-    async run(client, message, args) {
+    async run(message, args) {
+        const client = message.client;
         const player = client.music.getPlayer(message.guild.id);
         
         if (!player) {

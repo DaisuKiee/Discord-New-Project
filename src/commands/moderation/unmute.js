@@ -20,6 +20,7 @@ export default class UnmuteCommand extends Command {
                 user: [PermissionFlagsBits.ModerateMembers]
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'user',
@@ -29,6 +30,22 @@ export default class UnmuteCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const user = message.mentions.users.first();
+        if (!user) return message.reply('❌ Please mention a user!');
+
+        const member = await message.guild.members.fetch(user.id).catch(() => null);
+        if (!member) return message.reply('❌ User not found!');
+        if (!member.isCommunicationDisabled()) return message.reply('❌ User is not muted!');
+
+        try {
+            await member.timeout(null, `Unmuted by ${message.author.tag}`);
+            return message.reply(`✅ ${user} has been unmuted!`);
+        } catch (error) {
+            return message.reply('❌ Failed to unmute user.');
+        }
     }
 
     async slashRun(interaction) {

@@ -20,6 +20,7 @@ export default class KickCommand extends Command {
                 user: [PermissionFlagsBits.KickMembers]
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'user',
@@ -35,6 +36,28 @@ export default class KickCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const client = message.client;
+        const user = message.mentions.users.first();
+        if (!user) {
+            return message.reply('❌ Please mention a user to kick!');
+        }
+
+        const reason = args.slice(1).join(' ') || 'No reason provided';
+        const member = await message.guild.members.fetch(user.id).catch(() => null);
+        
+        if (!member) return message.reply('❌ User not found!');
+        if (!member.kickable) return message.reply('❌ I cannot kick this user!');
+
+        try {
+            const modCase = await client.moderation.kick(message.guild, user, message.author, reason);
+            const embed = client.moderation.createCaseEmbed(modCase, user, message.author);
+            return message.reply({ embeds: [embed] });
+        } catch (error) {
+            return message.reply('❌ Failed to kick user.');
+        }
     }
 
     async slashRun(interaction) {

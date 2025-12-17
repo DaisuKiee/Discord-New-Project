@@ -20,6 +20,7 @@ export default class UserInfoCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'user',
@@ -28,6 +29,40 @@ export default class UserInfoCommand extends Command {
                     required: false
                 }
             ]
+        });
+    }
+
+    async run(message, args) {
+        const user = message.mentions.users.first() || message.author;
+        const member = await message.guild.members.fetch(user.id).catch(() => null);
+        const { createContainer } = await import('../../utils/components.js');
+        const { MessageFlags } = await import('discord.js');
+
+        const sections = [
+            {
+                title: `👤 ${user.tag}`,
+                thumbnail: user.displayAvatarURL({ dynamic: true, size: 1024 }),
+                separator: true
+            },
+            {
+                title: '📋 Account Info',
+                description: `🆔 **ID:** ${user.id}\n📅 **Created:** <t:${Math.floor(user.createdTimestamp / 1000)}:R>\n🤖 **Bot:** ${user.bot ? 'Yes' : 'No'}`
+            }
+        ];
+
+        if (member) {
+            sections.push({
+                separator: true
+            }, {
+                title: '🏠 Server Info',
+                description: `📥 **Joined:** <t:${Math.floor(member.joinedTimestamp / 1000)}:R>\n🎭 **Roles:** ${member.roles.cache.size}\n🎨 **Highest Role:** ${member.roles.highest}`
+            });
+        }
+
+        const container = createContainer(sections);
+        return message.reply({ 
+            components: [container],
+            flags: MessageFlags.IsComponentsV2
         });
     }
 

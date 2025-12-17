@@ -20,6 +20,7 @@ export default class ImageCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'prompt',
@@ -40,6 +41,38 @@ export default class ImageCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const prompt = args.join(' ');
+        if (!prompt) return message.reply('❌ Please provide a prompt!');
+
+        const reply = await message.reply('🎨 Generating image...');
+
+        try {
+            const imageUrl = await message.client.ai.generateImage(prompt, { size: '1024x1024' });
+            const { createContainer, createMediaGallery } = await import('../../utils/components.js');
+            const { MessageFlags } = await import('discord.js');
+
+            const container = createContainer([
+                {
+                    title: '🎨 AI Generated Image',
+                    description: `**Prompt:** ${prompt}`,
+                    separator: true
+                },
+                {
+                    description: `[View Full Image](${imageUrl})`
+                }
+            ]);
+
+            return reply.edit({ 
+                content: null,
+                components: [container],
+                flags: MessageFlags.IsComponentsV2
+            });
+        } catch (error) {
+            return reply.edit('❌ Failed to generate image.');
+        }
     }
 
     async slashRun(interaction) {

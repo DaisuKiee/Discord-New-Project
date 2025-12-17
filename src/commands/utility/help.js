@@ -19,6 +19,7 @@ export default class HelpCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'command',
@@ -27,6 +28,91 @@ export default class HelpCommand extends Command {
                     required: false
                 }
             ]
+        });
+    }
+
+    async run(message, args) {
+        const commandName = args[0];
+        const client = message.client;
+        const { createContainer } = await import('../../utils/components.js');
+        const { MessageFlags, StringSelectMenuBuilder, ActionRowBuilder } = await import('discord.js');
+
+        if (commandName) {
+            const command = client.commands.get(commandName) || client.commands.get(client.aliases.get(commandName));
+            
+            if (!command) {
+                return message.reply(`❌ Command \`${commandName}\` not found!`);
+            }
+
+            const sections = [
+                {
+                    title: `📖 Command: ${client.config.prefix}${command.name}`,
+                    description: command.description.content,
+                    separator: true
+                },
+                {
+                    description: `📁 **Category:** ${command.category}\n⏱️ **Cooldown:** ${command.cooldown}s\n🔧 **Usage:** \`${client.config.prefix}${command.description.usage}\``
+                }
+            ];
+
+            if (command.aliases?.length > 0) {
+                sections.push({ separator: true }, {
+                    title: '🔀 Aliases',
+                    description: command.aliases.map(a => `\`${a}\``).join(', ')
+                });
+            }
+
+            if (command.description.examples?.length > 0) {
+                sections.push({ separator: true }, {
+                    title: '💡 Examples',
+                    description: command.description.examples.map(e => `\`${client.config.prefix}${e}\``).join('\n')
+                });
+            }
+
+            const container = createContainer(sections);
+            return message.reply({ 
+                components: [container],
+                flags: MessageFlags.IsComponentsV2
+            });
+        }
+
+        // Show all commands
+        const categories = [...new Set(client.commands.map(cmd => cmd.category))];
+        const categoryList = categories.map(cat => 
+            `${this.getCategoryEmoji(cat)} **${cat.charAt(0).toUpperCase() + cat.slice(1)}** - ${client.commands.filter(cmd => cmd.category === cat).size} commands`
+        ).join('\n');
+
+        const container = createContainer([
+            {
+                title: '📚 Bot Commands',
+                description: `Use \`${client.config.prefix}help <command>\` for more info.`,
+                separator: true
+            },
+            {
+                title: '📋 Categories',
+                description: categoryList,
+                separator: true
+            },
+            {
+                description: `**Total Commands:** ${client.commands.size}`
+            }
+        ]);
+
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId('help_category')
+            .setPlaceholder('Select a category')
+            .addOptions(categories.map(cat => ({
+                label: cat.charAt(0).toUpperCase() + cat.slice(1),
+                description: `View ${cat} commands`,
+                value: cat,
+                emoji: this.getCategoryEmoji(cat)
+            })));
+
+        container.addActionRowComponents(new ActionRowBuilder().addComponents(selectMenu));
+
+        return message.reply({ 
+            components: [container],
+            flags: MessageFlags.IsComponentsV2
         });
     }
 

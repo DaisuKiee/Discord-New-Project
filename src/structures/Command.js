@@ -43,6 +43,7 @@ export default class Command {
       user: options.permissions ? options.permissions.user || [] : [],
     };
     this.slashCommand = options.slashCommand || false;
+    this.prefixCommand = options.prefixCommand || false;
     this.options = options.options || [];
     this.category = options.category || "general";
   }

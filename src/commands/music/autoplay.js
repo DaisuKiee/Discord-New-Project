@@ -19,7 +19,45 @@ export default class AutoplayCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: []
+        });
+    }
+
+    async run(message, args) {
+        const client = message.client;
+        const player = client.music.getPlayer(message.guild.id);
+        
+        if (!player) {
+            return message.reply('❌ Nothing is playing right now!');
+        }
+
+        const voiceChannel = message.member.voice.channel;
+        if (!voiceChannel || voiceChannel.id !== player.voiceChannel) {
+            return message.reply('❌ You need to be in the same voice channel!');
+        }
+
+        player.autoplay = !player.autoplay;
+
+        const { createContainer } = await import('../../utils/components.js');
+        const { MessageFlags } = await import('discord.js');
+
+        const container = createContainer([
+            {
+                title: player.autoplay ? '✅ Autoplay Enabled' : '❌ Autoplay Disabled',
+                description: player.autoplay 
+                    ? 'The bot will automatically play related songs when the queue ends.'
+                    : 'Autoplay has been disabled. The bot will stop when the queue ends.',
+                separator: true
+            },
+            {
+                description: `🎵 **Status:** ${player.autoplay ? 'ON' : 'OFF'}`
+            }
+        ]);
+
+        return message.reply({ 
+            components: [container],
+            flags: MessageFlags.IsComponentsV2
         });
     }
 

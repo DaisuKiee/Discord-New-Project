@@ -19,6 +19,7 @@ export default class PlayCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'query',
@@ -30,17 +31,21 @@ export default class PlayCommand extends Command {
         });
     }
 
-    async run(client, message, args) {
+    async run(message, args) {
         const voiceChannel = message.member.voice.channel;
         if (!voiceChannel) {
             return message.reply('❌ You need to be in a voice channel!');
         }
 
         const query = args.join(' ');
+        if (!query) {
+            return message.reply('❌ Please provide a song name or URL!');
+        }
         
         // Create a fake interaction object for compatibility
         const fakeInteraction = {
             guild: message.guild,
+            member: message.member,
             user: message.author,
             channel: message.channel,
             deferReply: async () => {},
@@ -48,7 +53,7 @@ export default class PlayCommand extends Command {
             reply: async (content) => message.reply(content)
         };
 
-        await client.music.play(fakeInteraction, query);
+        await message.client.music.play(fakeInteraction, query);
     }
 
     async slashRun(interaction) {

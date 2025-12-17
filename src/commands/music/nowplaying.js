@@ -19,11 +19,13 @@ export default class NowPlayingCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: []
         });
     }
 
-    async run(client, message) {
+    async run(message, args) {
+        const client = message.client;
         const player = client.music.getPlayer(message.guild.id);
         
         if (!player || !player.currentTrack) {
@@ -37,25 +39,35 @@ export default class NowPlayingCommand extends Command {
         const progress = Math.floor((position / duration) * 20);
         const progressBar = '▬'.repeat(progress) + '🔘' + '▬'.repeat(20 - progress);
 
-        const embed = new EmbedBuilder()
-            .setColor(client.color.info)
-            .setAuthor({ name: 'Now Playing', iconURL: client.user.displayAvatarURL() })
-            .setTitle(track.info.title)
-            .setURL(track.info.uri)
-            .setThumbnail(track.info.artworkUrl || track.info.thumbnail)
-            .addFields(
-                { name: '👤 Artist', value: track.info.author || 'Unknown', inline: true },
-                { name: '⏱️ Duration', value: client.music.formatTime(duration), inline: true },
-                { name: '🔊 Volume', value: `${player.volume}%`, inline: true },
-                { name: '🎵 Requested by', value: `<@${track.info.requester}>`, inline: true },
-                { name: '⏯️ Status', value: player.isPaused ? 'Paused' : 'Playing', inline: true },
-                { name: '🔁 Loop', value: player.loop || 'Off', inline: true },
-                { name: '\u200b', value: `${progressBar}\n${client.music.formatTime(position)} / ${client.music.formatTime(duration)}` }
-            )
-            .setFooter({ text: `Queue: ${player.queue.length} song(s)` })
-            .setTimestamp();
+        const { createContainer, createMusicControls } = await import('../../utils/components.js');
+        const { MessageFlags } = await import('discord.js');
+        
+        const container = createContainer([
+            {
+                title: '🎵 Now Playing',
+                description: `**[${track.info.title}](${track.info.uri})**\nby ${track.info.author || 'Unknown'}`,
+                thumbnail: track.info.artworkUrl || track.info.thumbnail,
+                separator: true
+            },
+            {
+                description: `👤 **Requested by:** <@${track.info.requester}>\n⏱️ **Duration:** ${client.music.formatTime(duration)}\n🔊 **Volume:** ${player.volume}%\n⏯️ **Status:** ${player.isPaused ? 'Paused ⏸️' : 'Playing ▶️'}\n🔁 **Loop:** ${player.loop || 'Off'}`
+            },
+            {
+                description: `**Progress:**\n${progressBar}\n${client.music.formatTime(position)} / ${client.music.formatTime(duration)}`,
+                separator: true
+            },
+            {
+                description: `📊 **Queue:** ${player.queue.length} song(s) remaining`
+            }
+        ]);
 
-        return message.reply({ embeds: [embed] });
+        const buttons = createMusicControls(player.isPaused, player.autoplay || false);
+        buttons.forEach(row => container.addActionRowComponents(row));
+        
+        return message.reply({ 
+            components: [container],
+            flags: MessageFlags.IsComponentsV2
+        });
     }
 
     async slashRun(interaction) {

@@ -23,7 +23,7 @@ export class BotClient extends Client {
                 GatewayIntentBits.GuildMessages,
                 GatewayIntentBits.GuildMessageReactions,
                 GatewayIntentBits.GuildVoiceStates,
-                // MessageContent intent REMOVED - bot works with slash commands only
+                GatewayIntentBits.MessageContent,
             ],
             partials: [Partials.Channel, Partials.GuildMember, Partials.Message, Partials.User, Partials.Reaction],
         });

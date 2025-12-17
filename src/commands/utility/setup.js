@@ -20,6 +20,7 @@ export default class SetupCommand extends Command {
                 user: [PermissionFlagsBits.ManageGuild]
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'feature',
@@ -34,6 +35,21 @@ export default class SetupCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const feature = args[0];
+        const { EmbedBuilder } = await import('discord.js');
+
+        if (!feature) {
+            const embed = new EmbedBuilder()
+                .setColor(message.client.color.info)
+                .setTitle('⚙️ Bot Setup')
+                .setDescription(`Use \`${message.client.config.prefix}setup <feature>\` to configure:\n\n• \`tickets\` - Setup ticket system\n• \`music\` - Setup music panel\n• \`welcome\` - Setup welcome messages`);
+            return message.reply({ embeds: [embed] });
+        }
+
+        return message.reply(`⚙️ Please use the slash command \`/setup ${feature}\` for interactive setup.`);
     }
 
     async slashRun(interaction) {

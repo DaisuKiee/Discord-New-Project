@@ -19,6 +19,7 @@ export default class LoopCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'mode',
@@ -33,6 +34,33 @@ export default class LoopCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const client = message.client;
+        const player = client.music.getPlayer(message.guild.id);
+        
+        if (!player) {
+            return message.reply('❌ Nothing is playing!');
+        }
+
+        const voiceChannel = message.member.voice.channel;
+        if (!voiceChannel || voiceChannel.id !== player.voiceChannel) {
+            return message.reply('❌ You need to be in the same voice channel!');
+        }
+
+        const mode = args[0] || 'track';
+
+        if (mode === 'off') {
+            player.setLoop(0);
+            return message.reply('🔁 Loop disabled!');
+        } else if (mode === 'track') {
+            player.setLoop(1);
+            return message.reply('🔂 Looping current track!');
+        } else if (mode === 'queue') {
+            player.setLoop(2);
+            return message.reply('🔁 Looping queue!');
+        }
     }
 
     async slashRun(interaction) {

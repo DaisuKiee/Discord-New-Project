@@ -20,6 +20,7 @@ export default class CasesCommand extends Command {
                 user: [PermissionFlagsBits.ModerateMembers]
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'user',
@@ -28,6 +29,45 @@ export default class CasesCommand extends Command {
                     required: true
                 }
             ]
+        });
+    }
+
+    async run(message, args) {
+        const user = message.mentions.users.first();
+        if (!user) return message.reply('❌ Please mention a user!');
+
+        const cases = await message.client.moderation.getCases(message.guild.id, user.id);
+        if (!cases || cases.length === 0) {
+            return message.reply(`${user} has no moderation cases.`);
+        }
+
+        const { createContainer } = await import('../../utils/components.js');
+        const { MessageFlags } = await import('discord.js');
+
+        const casesList = cases.slice(0, 10).map(c => 
+            `**Case #${c.caseId}** - ${c.type.toUpperCase()}\nReason: ${c.reason}`
+        ).join('\n\n');
+
+        const container = createContainer([
+            {
+                title: `📋 Cases for ${user.tag}`,
+                thumbnail: user.displayAvatarURL(),
+                separator: true
+            },
+            {
+                description: casesList
+            },
+            {
+                separator: true
+            },
+            {
+                description: `📊 **Total cases:** ${cases.length}`
+            }
+        ]);
+
+        return message.reply({ 
+            components: [container],
+            flags: MessageFlags.IsComponentsV2
         });
     }
 

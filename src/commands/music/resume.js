@@ -19,11 +19,13 @@ export default class ResumeCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: []
         });
     }
 
-    async run(client, message) {
+    async run(message, args) {
+        const client = message.client;
         const player = client.music.getPlayer(message.guild.id);
         
         if (!player || !player.currentTrack) {

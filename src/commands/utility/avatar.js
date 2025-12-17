@@ -20,6 +20,7 @@ export default class AvatarCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'user',
@@ -28,6 +29,36 @@ export default class AvatarCommand extends Command {
                     required: false
                 }
             ]
+        });
+    }
+
+    async run(message, args) {
+        const user = message.mentions.users.first() || message.author;
+        const { createContainer, createButtonRow } = await import('../../utils/components.js');
+        const { MessageFlags } = await import('discord.js');
+
+        const container = createContainer([
+            {
+                title: `🖼️ ${user.tag}'s Avatar`,
+                thumbnail: user.displayAvatarURL({ dynamic: true, size: 1024 }),
+                separator: true
+            },
+            {
+                description: `[Click here for full size](${user.displayAvatarURL({ dynamic: true, size: 4096 })})`
+            }
+        ]);
+
+        const links = createButtonRow([
+            { label: 'PNG', url: user.displayAvatarURL({ extension: 'png', size: 4096 }), emoji: '🖼️' },
+            { label: 'JPG', url: user.displayAvatarURL({ extension: 'jpg', size: 4096 }), emoji: '📷' },
+            { label: 'WEBP', url: user.displayAvatarURL({ extension: 'webp', size: 4096 }), emoji: '🎨' }
+        ]);
+
+        container.addActionRowComponents(links);
+
+        return message.reply({ 
+            components: [container],
+            flags: MessageFlags.IsComponentsV2
         });
     }
 

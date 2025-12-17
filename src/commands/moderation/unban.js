@@ -20,6 +20,7 @@ export default class UnbanCommand extends Command {
                 user: [PermissionFlagsBits.BanMembers]
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'user_id',
@@ -29,6 +30,18 @@ export default class UnbanCommand extends Command {
                 }
             ]
         });
+    }
+
+    async run(message, args) {
+        const userId = args[0];
+        if (!userId) return message.reply('❌ Please provide a user ID!');
+
+        try {
+            await message.guild.members.unban(userId);
+            return message.reply(`✅ User <@${userId}> has been unbanned!`);
+        } catch (error) {
+            return message.reply('❌ Failed to unban user. Make sure the ID is correct.');
+        }
     }
 
     async slashRun(interaction) {

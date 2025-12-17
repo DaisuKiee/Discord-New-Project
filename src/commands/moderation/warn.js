@@ -20,6 +20,7 @@ export default class WarnCommand extends Command {
                 user: [PermissionFlagsBits.ModerateMembers]
             },
             slashCommand: true,
+            prefixCommand: true,
             options: [
                 {
                     name: 'user',
@@ -37,7 +38,8 @@ export default class WarnCommand extends Command {
         });
     }
 
-    async run(client, message, args) {
+    async run(message, args) {
+        const client = message.client;
         const user = message.mentions.users.first();
         if (!user) {
             return message.reply('❌ Please mention a user to warn!');

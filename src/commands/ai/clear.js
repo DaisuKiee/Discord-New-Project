@@ -19,8 +19,18 @@ export default class ClearCommand extends Command {
                 user: []
             },
             slashCommand: true,
+            prefixCommand: true,
             options: []
         });
+    }
+
+    async run(message, args) {
+        try {
+            await message.client.ai.clearConversation(message.author.id, message.channel.id);
+            return message.reply('✅ Your AI conversation history has been cleared!');
+        } catch (error) {
+            return message.reply('❌ Failed to clear conversation history.');
+        }
     }
 
     async slashRun(interaction) {
